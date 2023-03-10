@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="/layui/css/layui.css">
+    <link rel="stylesheet" href="/css/custom.form.css">
+    <style>
+        .table-class table td{
+            text-align: center;
+        }
+
+        .bg-color{
+            background-color: #5FB878;
+        }
+
+        .error-bg-color{
+            background-color: #FF5722;
+        }
+
+        .selected{
+            background-color: #FF5722;
+        }
+    </style>
+</head>
+<body>
+<div>
+
+
+    <!--班级课表-->
+
+    <div class='layui-form'>
+        <div class="layui-form-item" style="padding-top: 10px;">
+            <input type="text" id="arrId" name="arrId" hidden />
+            <label class="layui-form-label" id="termIdLabel">学期</label>
+            <div class="layui-input-inline" id="termIdDiv">
+                <select id="termId" name="termId" lay-filter="select-term" th:with="list=${@dlTermService.getJSONList()}" lay-search="" lay-verify="required">
+                    <option value="">请选择学期</option>
+                    <option th:each="bean : ${list}" th:text="${bean.title}" th:value="${bean.id}"></option>
+                </select>
+            </div>
+            <label class="layui-form-label">班级</label>
+            <div class="layui-input-inline">
+                <select id="classType" name="classType" lay-filter="select-type" th:with="dics=${@sysDictService.getType('class_type')}" lay-search="">
+                    <option value="">请选择教育阶段</option>
+                    <option th:each="dic : ${dics}" th:text="${dic.label}" th:value="${dic.value}"></option>
+                </select>
+            </div>
+            <div class="layui-input-inline">
+                <select id="gradeId" name="gradeId" lay-filter="select-grade" lay-search="">
+                    <option value="">请选择年级</option>
+                </select>
+            </div>
+            <div class="layui-input-inline">
+                <select id="classId" name="classId" lay-filter="select-class" lay-verify="required">
+                    <option value="">请选择班级</option>
+                </select>
+            </div>
+            <button class="layui-btn" onclick="loadCourseData()"  id="search">查询</button>
+
+        </div>
+
+
+        <div class="layui-form-item layui-fluid table_div">
+
+            <div class="layui-row layui-col-space15">
+                <div class="layui-col-sm62 layui-col-md6 layui-col-lg6  table-class">
+                    <table id="courseTable" class="layui-table"></table>
+                </div>
+                <div class="layui-col-sm6 layui-col-md6 layui-col-lg6 table-class">
+                    <table id="targetCourseTable" class="layui-table"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
+<script src="/layui/layui.all.js"></script>
+<script src="/js/core.util.js"></script>
+<script>
+    //获取token
+    var token = CoreUtil.getData("access_token");
+    //地址栏转义token中的#号
+    var tokenQuery = token.replace("#", "%23");
+    var tableIns1;
+    var table = layui.table;
+    var form = layui.form;
+    var layer = layui.layer;
+    var $ = jQuery = layui.jquery;
+    var laydate = layui.laydate;
+
+    var idPre = "ct001";
+    var targetIdPre = "rt002";
+
+    var courseTableId = null;//用于保存被点中需要调课的td节点
+
+
+
+
+    layui.use(['table', 'layer', 'laydate'], function () {
+        loadClassCourseTable();
+        loadTargetCourseTable();
+
+        form.on('select(select-type)', function(){
+            loadGradeSelect();
+        });
+
+        form.on('select(select-grade)', function(){
+            loadClassSelect();
+        });
+
+
+
+    });
+
+
+
+    function loadClassSelect(){
+        var gradeId = $("#gradeId").val();
+        var classNode = $("#classId");
+        classNode.empty();
+        classNode.append("<option value=\"\">请选择班级</option>");
+        if(CoreUtil.isEmpty(gradeId)){
+            return;
+        }
+        CoreUtil.sendPost("/dlClass/getListByGradeId", {gradeId: gradeId}, function (res) {
+            var data = res.data;
+            for(var i = 0; i < data.length; i ++ ){
+                classNode.append('<option value="'+ data[i].id +'">' + data[i].classNo +'班</option>');
+            }
+            form.render("select");
+        }, false);
+
+    }
+
+    function loadGradeSelect(){
+        var classType = $("#classType").val();
+        var node = $("#gradeId");
+        var classNode = $("#classId");
+        node.empty();
+        classNode.empty();
+
+        node.append("<option value=\"\">请选择年级</option>");
+        if(CoreUtil.isEmpty(classType)){
+            return;
+        }
+        CoreUtil.sendPost("/dlGrade/getGradeListByClassType", {type: classType}, function (res) {
+            var data = res.data;
+            for(var i = 0; i < data.length; i ++ ){
+                node.append('<option value="'+ data[i].id +'">' + data[i].gradeName +'级</option>');
+            }
+            form.render("select");
+        }, false);
+    }
+
+
+
+
+    function loadClassCourseTable(){
+        var courseTable = $("#courseTable");
+        courseTable.empty();
+        CoreUtil.loadCourseTable(7, 4, 3, 2, courseTable, idPre);
+    }
+
+    function loadTargetCourseTable(){
+        var targetCourseTable = $("#targetCourseTable");
+        targetCourseTable.empty();
+        CoreUtil.loadCourseTable(7, 4, 3, 2, targetCourseTable, targetIdPre);
+    }
+
+
+    function loadCourseData(){
+        courseTableId = null;
+        loadClassCourseTable();
+        var classId = $("#classId").val();
+        var termId = $("#termId").val();
+        var teacherId = $("#teacherId").val();
+        var arrId = $("#arrId").val();
+        if(CoreUtil.isEmpty(termId)){
+            termId = null;
+        }
+        loadData("/dlCourseTable/table", {termId: termId, teacherId: teacherId, classId: classId, arrId: arrId}, idPre);
+
+        $("#courseTable td").click(function() {
+            var id = $(this).attr("id");
+            if(CoreUtil.isEmpty(id)){//如果点击到了其他区域的td
+                return;
+            }
+            var rid = $(this).attr("rid");
+            var exchange = $(this).attr("exchange");
+            if(CoreUtil.isEmpty(courseTableId)){
+                courseTableId = rid;
+                if(CoreUtil.isEmpty(rid)){
+                    return;
+                }
+                addTableEvent(rid);
+                $(this).addClass("layui-bg-blue");
+            }else{
+
+                if(courseTableId != rid && exchange){
+                    //判断是否是可调课位置，如果是，那么就执行调课-----------------------------
+                    id = id.substring(idPre.length);
+                    var len = id.length;
+                    var col = id.substring(len - 1, len);
+                    var row = id.substring(0, len - 1);
+                    CoreUtil.sendPost("/dlCourseTable/exchange", {id: courseTableId, col: col, row: row}, function (res) {
+                        loadCourseData();
+                    });
+                }
+                removeTableEvent();
+                //去除样式
+                clearCourseTableAttributes();
+                courseTableId = null;
+            }
+        });
+    }
+
+    function clearCourseTableAttributes(){
+        $("#courseTable td").each(function () {
+            $(this).removeAttr("exchange");
+            $(this).removeClass("bg-color");
+            $(this).removeClass("error-bg-color");
+            $(this).removeClass("layui-bg-blue");
+        })
+    }
+
+
+
+    function addTableEvent(id) {
+        //发出请求，查看那些位置的是可以调课的，并给这些位置添加exchange属性为true
+        CoreUtil.sendPost("/dlCourseTable/getAllowPosition", {id: id}, function (res) {
+            var data = res.data;
+            for(var i = 0; i < data.length; i ++){
+                $("#" + idPre + data[i].row + data[i].col).attr("exchange", true);
+                $("#" + idPre + data[i].row + data[i].col).addClass("bg-color");
+            }
+        }, false);
+
+
+
+        $("#courseTable td").mouseover(function(){
+            var exchange = $(this).attr("exchange");
+            if(exchange){
+                var rid = $(this).attr("rid");
+                if(!CoreUtil.isEmpty(rid)){
+                    //加载
+                    loadTargetTable(rid);
+                }
+            }else{
+                $(this).removeClass("bg-color");
+                $(this).addClass("error-bg-color");
+            }
+
+
+            //添加样式
+        });
+
+        $("#courseTable td").mouseout(function(){
+            //去除样式
+            $(this).removeClass("error-bg-color");
+            var exchange = $(this).attr("exchange");
+            if(exchange){
+                $(this).addClass("bg-color");
+            }
+        });
+    }
+
+
+    function removeTableEvent() {
+        $("#courseTable td").unbind("mouseover");
+        $("#courseTable td").unbind("mouseout");
+    }
+
+    function loadTargetTable(id) {
+        loadTargetCourseTable();
+        loadData("/dlCourseTable/getListById", {id: id}, targetIdPre);
+    }
+
+    function loadData(url, params, idPre) {
+        CoreUtil.sendPost(url, params, function (res) {
+            var data = res.data;
+            var content = "";
+            for (var i = 0; i < data.length; i ++){
+                content = "<p>" + data[i].courseName + "</p><p>" + data[i].teacherName + "</p><p>" + data[i].className + "</p>";
+                $("#" + idPre + data[i].row + data[i].col).html(content);
+                $("#" + idPre + data[i].row + data[i].col).attr("rid", data[i].id);
+            }
+        });
+    }
+
+
+    function clearTargetTableData() {
+        $("#targetCourseTable td").each(function () {
+            if(!CoreUtil.isEmpty($(this).attr("id"))){
+                $(this).attr("rid", "");
+                $(this).text("");
+            }
+        });
+    }
+
+    function clearCourseTableData() {
+        $("#courseTable td").each(function () {
+            if(!CoreUtil.isEmpty($(this).attr("id"))){
+                $(this).attr("rid", "");
+                $(this).text("");
+            }
+        });
+    }
+
+
+
+</script>

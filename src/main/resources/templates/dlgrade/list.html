@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <link rel="stylesheet" href="/layui/css/layui.css">
+  <link rel="stylesheet" href="/css/custom.form.css">
+    <style>
+        .custom-tree-item-clicked{color:#FC9003}
+    </style>
+</head>
+<body>
+<div class="panel panel-default operation" hidden id="addOrUpdatePan">
+  <div class="panel-heading title"></div>
+<div class="layui-card-body">
+<form class="layui-form " action="" lay-filter="info" style="width: 700px;margin-top: 10px">
+      <input name="id" hidden/>
+        <div class="layui-form-item">
+      <label class="layui-form-label">年级名称</label>
+      <div class="layui-input-inline">
+        <input type="gradeName" name="gradeName" placeholder="请输入年级名称" autocomplete="off" class="layui-input">
+      </div>
+      <div class="layui-form-mid layui-word-aux">级</div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">年级状态</label>
+        <div class="layui-input-inline">
+            <select id="status" name="status" lay-filter="select-status" th:with="roomType=${@sysDictService.getType('class_status')}">
+                <option value="">请选择</option>
+                <option th:each="dict : ${roomType}" th:text="${dict.label}" th:value="${dict.value}"></option>
+            </select>
+        </div>
+
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">所属阶段</label>
+        <div class="layui-input-inline">
+            <select id="type" name="type" lay-filter="select-type" th:with="classType=${@sysDictService.getType('class_type')}">
+                <option value="">请选择</option>
+                <option th:each="dict : ${classType}" th:text="${dict.label}" th:value="${dict.value}"></option>
+            </select>
+        </div>
+        <label class="layui-form-label">年级</label>
+        <div class="layui-input-inline">
+            <select id="gradeNum" name="gradeNum" lay-filter="select-gradeNum">
+                <option value="">请选择</option>
+            </select>
+        </div>
+    </div>
+        <div class="layui-form-item">
+      <label class="layui-form-label">备注</label>
+      <div class="layui-input-block">
+        <input type="remark" name="remark" placeholder="请输入" autocomplete="off" class="layui-input">
+      </div>
+    </div>
+  <div class="layui-form-item">
+  <div class="layui-input-block">
+    <button type="submit" class="layui-btn" lay-submit="" lay-filter="submit">保存</button>
+    <button  class="layui-btn layui-btn-primary" id="btn_cancel">返回</button>
+  </div>
+</div>
+</form>
+</div>
+</div>
+<div class="layui-fluid">
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-sm12 layui-col-md2 layui-col-lg2">
+            <div class="layui-card">
+                <div class="layui-card-body mini-bar" id="leftTree"></div>
+            </div>
+        </div>
+        <div class="layui-col-sm12 layui-col-md10 layui-col-lg10">
+            <div class="table_div">
+              <div id="searchParam"  shiro:hasPermission="dlGrade:list">
+                <div class="layui-form-item">
+                  <div class="layui-input-inline">
+                    <input type="text" id="key" class="layui-input"  autocomplete="off" placeholder="请输入">
+                  </div>
+
+                  <div class="layui-input-inline ">
+                    <button class="layui-btn" onclick="search()"  id="search">查询</button>
+                    <button class="layui-btn"   id="export">导出全部</button>
+                  </div>
+                </div>
+
+              </div>
+              <table class="layui-table" id="showTable" lay-filter="showTable" ></table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="panel panel-default operation" id="dictAddDetail" hidden >
+    <div class="layui-card-body">
+            <div class="layui-form-item">
+                <label class="layui-form-label">类型名称</label>
+                <div class="layui-input-inline">
+                    <input type="label" id="dict_label" name="dict_label" placeholder="请输入字典标签" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <button class="layui-btn"  lay-filter="addDetail" id="addDetail">保存</button>
+                </div>
+            </div>
+    </div>
+</div>
+
+
+
+<script type="text/html" id="toolbar">
+  <div class="layui-btn-container">
+    <button class="layui-btn layui-btn-sm" lay-event="add"  shiro:hasPermission="dlGrade:add">添加</button>
+    <button class="layui-btn layui-btn-sm" lay-event="batchDeleted" shiro:hasPermission="dlGrade:delete">删除</button>
+  </div>
+</script>
+<script type="text/html" id="tool">
+  <a class="layui-btn layui-btn-xs" lay-event="edit" shiro:hasPermission="dlGrade:update">编辑</a>
+  <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del" shiro:hasPermission="dlGrade:delete">删除</a>
+</script>
+
+</body>
+</html>
+<script src="/layui/layui.all.js"></script>
+<script src="/js/core.util.js"></script>
+<script>
+  //获取token
+  var token = CoreUtil.getData("access_token");
+
+  var classTypeDatas = "[[${@sysDictService.getType('class_type')}]]".replace(/&quot;/g,"\"");
+  var classStatusDatas = "[[${@sysDictService.getType('class_status')}]]".replace(/&quot;/g,"\"");
+  var gradeDatas = "[[${@sysDictService.getType('grade')}]]".replace(/&quot;/g,"\"");
+  //地址栏转义token中的#号
+  var tokenQuery = token.replace("#", "%23");
+  var tableIns1;
+  var table = layui.table;
+  var form = layui.form;
+  var tree = layui.tree;
+
+  var layer = layui.layer;
+  var $ = jQuery = layui.jquery;
+  var laydate = layui.laydate;
+
+
+  var dictId = null;
+  var classType = null;
+
+  layui.use(['table', 'layer', 'laydate'], function () {
+
+     loadLeftTree(classTypeDatas);
+
+
+    //加载table
+    tableIns1 = table.render({
+      elem: '#showTable'
+      , contentType: 'application/json'
+      , headers: {"authorization": token}
+      , page: true //开启分页
+      , url: '/dlGrade/listByPage' //数据接口
+      , method: 'POST'
+      , parseData: function (res) { //将原始数据解析成 table 组件所规定的数据
+        return {
+          "code": res.code, //解析接口状态
+          "msg": res.msg, //解析提示文本
+          "count": CoreUtil.isEmpty(res.data) ? 0 : res.data.total, //解析数据长度
+          "data": CoreUtil.isEmpty(res.data) ? null : res.data.records //解析数据列表
+        }
+      }
+      , cols: [
+        [
+          {type: 'checkbox', fixed: 'left'},
+          {field: 'gradeName', title: '年级名称', sort: true, templet: function (item) {
+              return item.gradeName + "级";
+          }
+          },
+          {field: 'type', title: '教育阶段', sort: true, templet: function (item) {
+                  //获取类型对应的字典label
+                  return CoreUtil.selectDictLabel(classTypeDatas, item.type);
+              }
+          },
+          {field: 'status', title: '状态', sort: true, templet: function (item) {
+                  if (item.status === 1) {
+                      return '  <input type="checkbox" name = "' + item.id + '" value="1" lay-skin="switch" lay-text="在校|毕业" checked  lay-filter="onOff">';
+                  }else{
+                      return '  <input type="checkbox" name = "' + item.id + '" value="2" lay-skin="switch" lay-text="在校|毕业"  lay-filter="onOff">';
+                  }
+              }
+          },
+          {field: 'gradeNum', title: '年级', sort: true, templet: function (item) {
+                //获取类型对应的字典label
+                return CoreUtil.selectDictLabel(gradeDatas, item.gradeNum);
+            }
+          },
+          {field: 'remark', title: '备注', sort: true},
+
+          {width: 120, toolbar: "#tool", title: '操作'}
+        ]
+      ]
+      , toolbar: '#toolbar'
+    });
+
+
+    //表头工具
+    table.on('toolbar(showTable)', function(obj){
+      switch(obj.event){
+        case 'batchDeleted':
+          var checkStatus = table.checkStatus(obj.config.id);
+          var data = checkStatus.data;
+          if(data.length==0){
+            layer.msg("请选择要批量删除的列");
+          }else {
+            var ids = [];
+            $(data).each(function (index,item) {
+              ids.push(item.id);
+            });
+            tipDialog(ids);
+          }
+          break;
+          case 'add':
+          $(".table_div").hide();
+          $("#leftTree").hide();
+          $("#addOrUpdatePan").show();
+          $(".title").html("新增");
+          $("#addOrUpdatePan input[name=id]").val("");
+          $("#addOrUpdatePan input[name=gradeName]").val("");
+          $("#addOrUpdatePan input[name=status]").val("");
+          $("#addOrUpdatePan input[name=remark]").val("");
+            if (!CoreUtil.isEmpty(classType)) {
+                $("#type").find('option[value="'+classType+'"]').prop('selected',true);
+            }
+            $("#gradeNum").val("");
+              form.render("select");
+          break;
+      };
+    });
+    //列操作
+    table.on('tool(showTable)',function (obj) {
+      var data = obj.data;
+      switch (obj.event) {
+        case 'del':
+          var ids=[];
+          ids.push(data.id);
+          tipDialog(ids);
+          break;
+        case 'edit':
+          $(".table_div").hide();
+          $("#leftTree").hide();
+          $("#addOrUpdatePan").show();
+          $(".title").html("编辑");
+          $("#addOrUpdatePan input[name=id]").val(data.id);
+          $("#addOrUpdatePan input[name=gradeName]").val(data.gradeName);
+          if (!CoreUtil.isEmpty(data.status)) {
+              $("#status").find('option[value="'+data.status+'"]').prop('selected',true);
+              form.render();
+          }
+          $("#addOrUpdatePan input[name=remark]").val(data.remark);
+          if (!CoreUtil.isEmpty(data.type)) {
+              $("#type").find('option[value="'+data.type+'"]').prop('selected',true);
+              form.render();
+          }
+
+          reloadGradeNumSelect();
+            if (!CoreUtil.isEmpty(data.gradeNum)) {
+                $("#gradeNum").find('option[value="'+data.gradeNum+'"]').prop('selected',true);
+                form.render();
+            }
+          break;
+      }
+    });
+
+      form.on('switch(onOff)', function (obj) {
+          var id = this.name;
+          var value = this.value;
+          value = value == 1 ? 2 : 1;  // 状态取反保存
+          var str = value == 1 ? "在校": "结业";
+          layer.open({
+              content: "确定修改成" + str + "?",
+              btn: ['确定', '取消'],
+              yes: function(index, layero){
+                  layer.close(index); //如果设定了yes回调，需进行手工关闭
+                  CoreUtil.sendPut("/dlGrade/update",{id: id, status: value},function (res) {
+                      layer.msg("操作成功");
+                      search();
+                  });
+              },
+              btn2: function (index, layero) {
+                  search();
+              }
+          });
+
+      });
+
+    //导出
+    $('#export').on('click', function () {
+      //原先分页limit
+      var exportParams = {
+        limit: 10000,
+        key: $("#key").val()
+      };
+      CoreUtil.sendPost("/dlGrade/listByPage", exportParams, function (res) {
+        //初始化渲染数据
+        if (res.data != null && res.data.records != null) {
+          table.exportFile(tableIns1.config.id, res.data.records, 'xls');
+        }
+      });
+    });
+
+    //删除
+    var tipDialog=function (ids) {
+      layer.open({
+        content: "确定要删除么?",
+        yes: function(index, layero){
+          layer.close(index); //如果设定了yes回调，需进行手工关闭
+          CoreUtil.sendDelete("/dlGrade/delete",ids,function (res) {
+            layer.msg(res.msg, {time:1000},function () {
+              search();
+            });
+          });
+        }
+      });
+    };
+
+    //返回
+    $("#btn_cancel").click(function() {
+      $(".table_div").show();
+      $("#leftTree").show();
+      $("#addOrUpdatePan").hide();
+      return false;
+    });
+
+
+    $("#addDetail").click(function(){
+        var dict_label = $("#dict_label").val();
+        if(dict_label == null || dict_label == undefined || dict_label == ""){
+            layer.msg("请输入类型名称");
+            return;
+        }
+        var params = {
+            dictId: dictId,
+            label: dict_label
+        }
+
+        CoreUtil.sendPost("/sysDictDetail/addByGradePage", params, function(res){
+            if(res.code == 0){
+
+                //做一个ajax请求来拉去数据
+                classTypeDatas = JSON.stringify(res.data);
+                console.log(JSON.stringify(res.data));
+                tree.reload("leftTree", {data: JSON.parse(classTypeDatas)});
+                layer.closeAll();
+                form.render();
+            }
+            layer.msg(res.msg);
+        });
+
+
+    });
+
+    //监听保存
+      form.on('select(select-type)', function () {
+          reloadGradeNumSelect();
+      });
+
+
+
+
+    form.on('submit(submit)', function(data){
+      if(data.field.id===undefined || data.field.id===null || data.field.id===""){
+        CoreUtil.sendPost("/dlGrade/add",data.field,function (res) {
+          $(".table_div").show();
+          $("#leftTree").show();
+          $("#addOrUpdatePan").hide();
+          search();
+        });
+      }else {
+        CoreUtil.sendPut("/dlGrade/update",data.field,function (res) {
+          $(".table_div").show();
+          $("#leftTree").show();
+          $("#addOrUpdatePan").hide();
+          search();
+        });
+      }
+
+      return false;
+    });
+  });
+
+
+
+
+  function openAddDictDiv() {
+      layer.open({
+          type: 1,
+          title: "新增类型",
+          content: $('#dictAddDetail')
+      });
+  }
+
+
+  function reloadGradeNumSelect(){
+      var gradeType = $("#type").val();
+      var params = {
+          type: "grade",
+          valueLike: gradeType
+      }
+      CoreUtil.sendPost("/sysDict/getTypeByNameAndValueLike?authorization=" + tokenQuery, params, function (res) {
+          var gradeNum =  $("#gradeNum");
+          var data = res.data;
+          console.log(JSON.stringify(data));
+          gradeNum.empty();
+          gradeNum.append("<option value=\"\">请选择</option>")
+          for(var i = 0; i < data.length; i ++){
+              gradeNum.append("<option value='"+ data[i].value+"'>" + data[i].label + "</option>");
+          }
+          form.render("select");
+      }, false);
+
+
+  }
+
+
+
+  function loadLeftTree(data) {
+      console.log(data);
+      data = JSON.parse(data);
+      dictId = data[0].dictId;
+      tree.render({
+          elem: '#leftTree'
+          , data: data
+          , id: "leftTree"
+          , onlyIconControl: true  //是否仅允许节点左侧图标控制展开收缩
+          , click: function (obj) {
+              console.log(obj)
+              classType = obj.data.value;
+              $("#leftTree span").removeClass('custom-tree-item-clicked');     //清除旧的样式
+              $("#leftTree span:contains(" + obj.data.label + ")").addClass('custom-tree-item-clicked');
+              search();
+
+          }
+      });
+
+   };
+
+  //执行查询
+  function search() {
+    //这里以搜索为例
+    tableIns1.reload({
+      where: { //设定异步数据接口的额外参数，任意设
+        type: classType
+      }
+      , page: {
+        curr: 1 //重新从第 1 页开始
+      }
+    });
+  };
+</script>

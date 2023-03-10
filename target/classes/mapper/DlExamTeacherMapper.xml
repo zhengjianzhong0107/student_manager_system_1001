@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.company.project.mapper.DlExamTeacherMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.company.project.entity.DlExamTeacherEntity" id="dlExamTeacherMap">
+        <result property="id" column="id"/>
+        <result property="examId" column="exam_id"/>
+        <result property="teacherId" column="teacher_id"/>
+        <result property="teacherName" column="teacher_name"/>
+        <result property="username" column="username"/>
+    </resultMap>
+
+    <select id="getCountByExamIdAndTeacherId" parameterType="com.company.project.entity.DlExamTeacherEntity" resultType="int">
+        select count(id) from dl_exam_teacher where exam_id=#{examId} and teacher_id=#{teacherId}
+    </select>
+
+
+</mapper>

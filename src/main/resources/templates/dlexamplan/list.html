@@ -1,0 +1,1673 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <link rel="stylesheet" href="/layui/css/layui.css">
+  <link rel="stylesheet" href="/css/custom.form.css">
+    <link rel="stylesheet" href="/layui/extend/steps/style.css">
+    <style>
+
+        .fixed_div{
+            position:fixed;
+            right:100px;
+            bottom:0px;
+        }
+    </style>
+
+</head>
+<body>
+
+<div id="step_demo" class="step-body" hidden>
+    <div class="step-header" style="width:80%;overflow: hidden;">
+        <ul>
+            <li>
+                <span class="step-name">基本信息设置</span>
+            </li>
+            <li>
+                <span class="step-name">参考班级设置</span>
+            </li>
+            <li>
+                <span class="step-name">参考课程设置</span>
+            </li>
+            <li>
+                <span class="step-name">考场设置</span>
+            </li>
+            <li>
+                <span class="step-name">监考老师设置</span>
+            </li>
+            <li>
+                <span class="step-name">考场监考调整</span>
+            </li>
+            <li>
+                <span class="step-name">完成</span>
+            </li>
+        </ul>
+    </div>
+    <br>
+    <div class="step-content">
+        <div class="step-list">
+            <div class="panel panel-default">
+                <!--
+                <div class="panel-heading title"></div>-->
+                <div class="layui-card-body">
+                    <form class="layui-form " action="" lay-filter="info" style="width: 900px;margin-top: 10px">
+                        <input id="id" name="id" hidden/>
+                        <input name="timeStart" id="timeStart" hidden/>
+                        <input name="timeEnd" id="timeEnd" hidden/>
+                        <input name="termName" id="termName" hidden/>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">计划标题</label>
+                            <div class="layui-input-block">
+                                <input type="name" name="name" placeholder="请输入考试计划标题" autocomplete="off" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">考试时间</label>
+                            <div class="layui-input-block">
+                                <input id="time" name="time" type="text" placeholder="请输入考试开始时间" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">学期</label>
+                            <div class="layui-input-inline">
+                                <select id="termId" name="termId" lay-filter="select-term" th:with="list=${@dlTermService.getJSONList()}" lay-search="">
+                                    <option value="">请选择学期</option>
+                                    <option th:each="bean : ${list}" th:text="${bean.title}" th:value="${bean.id}"></option>
+                                </select>
+                            </div>
+                            <label class="layui-form-label">监考人数</label>
+                            <div class="layui-input-inline">
+                                <input id="invigilatorNum" name="invigilatorNum" type="text" placeholder="请输入监考教师人数" lay-verify="required|number" class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">参考年级</label>
+                            <div class="layui-input-inline">
+                                <select id="classType" name="classType" lay-filter="select-class" th:with="dics=${@sysDictService.getType('class_type')}" lay-search="">
+                                    <option value="">请选择教育阶段</option>
+                                    <option th:each="dic : ${dics}" th:text="${dic.label}" th:value="${dic.value}"></option>
+                                </select>
+                            </div>
+                            <div class="layui-input-inline">
+                                <select id="gradeId" name="gradeId" lay-filter="select-type" lay-search="">
+                                    <option value="">请选择年级</option>
+                                </select>
+                            </div>
+                            <label class="layui-form-label">考试类型</label>
+                            <div class="layui-input-inline">
+                                <select id="examType" name="examType" lay-filter="select-type" th:with="classType=${@sysDictService.getType('exam_type')}">
+                                    <option value="">请选择</option>
+                                    <option th:each="dict : ${classType}" th:text="${dict.label}" th:value="${dict.value}"></option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">考试描述</label>
+                            <div class="layui-input-block">
+                                <textarea id="examDesc" name="examDesc" placeholder="请输入考试描述" autocomplete="off" class="layui-textarea"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="layui-form-item">
+                            <div class="layui-input-block fixed_div">
+                                <button  class="layui-btn layui-btn-primary" id="btn_cancel">返回</button>
+                                <button type="submit" class="layui-btn" lay-submit="" lay-filter="submitPlan">保存并下一步</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="step-list">
+            <!-- 添加班级和课程 -->
+
+            <div id="add_class" class="panel panel-default">
+                <div class="layui-form-item">
+
+                    <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+                        <legend>选择参考班级</legend>
+                    </fieldset>
+                    <div class="layui-inline">
+                        <div id="class_div" class="demo-transfer" width="50%"></div>
+                    </div>
+
+                </div>
+
+                <div class="layui-form-item">
+                    <div class="layui-input-block fixed_div">
+                        <button  class="layui-btn layui-btn-primary" onclick="preStep()">上一步</button>
+                        <button type="submit" class="layui-btn" lay-submit=""  onclick="nextStep()" id="class_next">下一步</button>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="step-list">
+            <div id="add_course" class="panel panel-default">
+                <div class="layui-row layui-col-space15">
+
+                    <div class="layui-col-sm12 layui-col-md12 layui-col-lg6">
+                        <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+                            <legend>选择参考科目</legend>
+                        </fieldset>
+                        <div class="layui-inline" style="">
+                            <div id="course_div" class="demo-transfer" ></div>
+                        </div>
+                    </div>
+                    <div class="layui-col-sm12 layui-col-md12 layui-col-lg6">
+						<fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+                            <legend>参考科目</legend>
+                        </fieldset>
+                        <div class="layui-inline">
+                            <table class="layui-table" id="courseTab" lay-filter="courseTab" style="width: auto" ></table>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="layui-form-item">
+                    <div class="layui-input-block fixed_div">
+                        <button  class="layui-btn layui-btn-primary"  onclick="preStep()">上一步</button>
+                        <button type="submit" class="layui-btn" lay-submit="" id="courseNext">下一步</button>
+
+                    </div>
+                </div>
+
+
+            </div>
+
+        </div>
+        <!-- 设置考场 -->
+        <div class="step-list">
+            <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+                <legend>配置考场教室</legend>
+            </fieldset>
+            <div class="layui-form">
+            <div class="layui-row layui-col-space15">
+                <div class="layui-col-sm12 layui-col-md12 layui-col-lg6">
+                    <div>
+                        <div id="searchRoom" shiro:hasPermission="dlRoom:list">
+                            <div class="layui-form-item">
+                                <div class="layui-input-inline">
+                                    <select id="roomType" name="roomType" lay-filter="select-type" th:with="roomType=${@sysDictService.getType('classroom_type')}">
+                                        <option value="">请选择教室类型</option>
+                                        <option th:each="dict : ${roomType}" th:text="${dict.label}" th:value="${dict.value}"></option>
+                                    </select>
+                                </div>
+                                <div class="layui-input-inline">
+                                    <input type="text" id="roomName" name="roomName"  class="layui-input" autocomplete="off" placeholder="请输入教室名称">
+                                </div>
+                                <div class="layui-input-inline ">
+                                    <button class="layui-btn" onclick="loadRoomTab()">查询</button>
+                                </div>
+                            </div>
+                        </div>
+                        <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+                            <legend>教室列表（双击教室列表行就可以添加该教室为考场教室）</legend>
+                        </fieldset>
+                        <table class="layui-table" id="roomTable" lay-filter="roomTable"></table>
+                    </div>
+                </div>
+                <div class="layui-col-sm12 layui-col-md12 layui-col-lg6" style="margin-top: 43px;">
+                    <div>
+                        <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+                            <legend>考场教室列表</legend>
+                        </fieldset>
+                        <table class="layui-table" id="examRoomTab" lay-filter="examRoomTab"></table>
+                    </div>
+                </div>
+            </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-input-block fixed_div">
+                    <button  class="layui-btn layui-btn-primary"  onclick="preStep()">上一步</button>
+                    <button type="submit" class="layui-btn" lay-submit=""  id="roomNext">下一步</button>
+                </div>
+            </div>
+        </div>
+        <!-- 监考老师设置 -->
+        <div class="step-list">
+            <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+                <legend>添加监考教师</legend>
+            </fieldset>
+            <div class="layui-form">
+                <div class="layui-row layui-col-space15">
+                    <div class="layui-col-sm12 layui-col-md12 layui-col-lg6">
+                        <div>
+                            <div id="searchTeacher" shiro:hasPermission="sys:user:list">
+                                <div class="layui-form-item">
+
+                                    <div class="layui-input-inline">
+                                        <input type="text" id="username" name="username"  class="layui-input" autocomplete="off" placeholder="请输入教师账号">
+                                    </div>
+                                    <div class="layui-input-inline">
+                                        <input type="text" id="realName" name="realName"  class="layui-input" autocomplete="off" placeholder="请输教师姓名">
+                                    </div>
+                                    <div class="layui-input-inline ">
+                                        <button class="layui-btn" onclick="loadTeacherTab()">查询</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+                                <legend>教师列表（双击教师列表行就可以添加该教师为监考教师）</legend>
+                            </fieldset>
+                            <table class="layui-table" id="teacherTable" lay-filter="teacherTable"></table>
+                        </div>
+                    </div>
+                    <div class="layui-col-sm12 layui-col-md12 layui-col-lg6">
+                        <div>
+                            <div id="addTeacher" shiro:hasPermission="dlExamTeacher:add">
+                                <div class="layui-form-item">
+                                    <div class="layui-input-inline ">
+                                        <button class="layui-btn" onclick="addTeachers()">快速添加任课老师</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+                                <legend>监考教师列表</legend>
+                            </fieldset>
+                            <table class="layui-table" id="examTeacherTab" lay-filter="examTeacherTab"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-input-block fixed_div">
+                    <button  class="layui-btn layui-btn-primary"  onclick="preStep()">上一步</button>
+                    <button type="submit" class="layui-btn" lay-submit=""  id="teacherNext">下一步</button>
+                </div>
+            </div>
+        </div>
+        <!-- 考场监考调整 -->
+        <div class="step-list">
+            <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+                <legend>考场监考安排与调整</legend>
+            </fieldset>
+            <div id="createList" shiro:hasPermission="dlExamList:add">
+                <div class="layui-form-item">
+                    <div class="layui-input-inline ">
+                        <button class="layui-btn" onclick="fastAdd()">快速排考</button>
+                    </div>
+                </div>
+            </div>
+            <table class="layui-table" id="examList" lay-filter="examList"></table>
+            <div class="layui-form-item">
+                <div class="layui-input-block fixed_div">
+                    <button  class="layui-btn layui-btn-primary"  onclick="preStep()">上一步</button>
+                    <button type="submit" class="layui-btn" lay-submit=""  id="saveBtn">保存</button>
+                    <button type="submit" class="layui-btn" lay-submit=""  id="sureBtn">确认发布</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+<div class="table_div">
+  <div id="searchParam"  shiro:hasPermission="dlExamPlan:list">
+    <div class="layui-form-item">
+      <div class="layui-input-inline">
+        <input type="text" id="key" class="layui-input"  autocomplete="off" placeholder="请输入">
+      </div>
+
+      <div class="layui-input-inline ">
+        <button class="layui-btn" onclick="search()"  id="search">查询</button>
+        <button class="layui-btn"   id="export">导出全部</button>
+      </div>
+    </div>
+
+  </div>
+  <table class="layui-table" id="showTable" lay-filter="showTable" ></table>
+</div>
+
+<!-- 新增或编辑课程列表信息 -->
+<div id="editCourseDiv" hidden>
+    <div class="layui-card-body layui-form">
+        <input id="c_id" hidden>
+        <input id="c_startTime" hidden/>
+        <input id="c_endTime" hidden>
+        <div class="layui-form-item">
+            <label class="layui-form-label">课程名称</label>
+            <div class="layui-input-block">
+                <input id="c_courseName" name="c_courseName" autocomplete="off" class="layui-input" readonly>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">科目总分</label>
+            <div class="layui-input-block">
+                <input id="c_totalScore" name="c_totalScore" type="text" placeholder="请输入科目总分" lay-verify="required|number" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">考试日期</label>
+            <div class="layui-input-block">
+                <input id="c_examDate" name="c_examDate" type="text" placeholder="请输入考试开始时间" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">考试时间</label>
+            <div class="layui-input-block">
+                <input id="c_examTime" name="c_examTime" type="text" placeholder="请输入考试开始时间" class="layui-input">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑考场信息 -->
+<div id="editRoomDiv" hidden>
+    <div class="layui-card-body layui-form">
+        <input id="r_id" hidden>
+        <div class="layui-form-item">
+            <label class="layui-form-label">教室名称</label>
+            <div class="layui-input-block">
+                <input id="r_classRoomName" name="r_classRoomName" autocomplete="off" class="layui-input" readonly>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">考场名称</label>
+            <div class="layui-input-block">
+                <input id="r_roomName" name="r_roomName" type="text" placeholder="请输入考场名称" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">考场容量</label>
+            <div class="layui-input-block">
+                <input id="r_capacity" name="r_capacity" type="text" placeholder="请输入考场容量" class="layui-input">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 考务安排调整信息 -->
+<div id="editListDiv" hidden>
+    <div class="layui-card-body layui-form">
+
+        <div class="layui-form-item">
+
+            <fieldset class="layui-elem-field">
+                <legend>监考教师</legend>
+                <div class="layui-field-box">
+                    <table class="layui-table" id="listTeaTab" lay-filter="listTeaTab" ></table>
+                </div>
+            </fieldset>
+        </div>
+    </div>
+</div>
+
+<div id="addTeacherDiv" hidden class="layui-form">
+    <fieldset class="layui-elem-field layui-field-title">
+    <legend style="text-align: center"><b>更换监考教师</b></legend>
+    <div class="layui-form-item">
+        <label class="layui-form-label">监考教师</label>
+        <div class="layui-input-inline">
+            <select id="listTeacherId" name="listTeacherId" lay-filter="select-list-teacher">
+                <option value="">请选择监考教师</option>
+            </select>
+        </div>
+
+    </div>
+    </fieldset>
+
+</div>
+
+
+
+<script type="text/html" id="toolbar">
+  <div class="layui-btn-container">
+    <button class="layui-btn layui-btn-sm" lay-event="add"  shiro:hasPermission="dlExamPlan:add">添加</button>
+    <button class="layui-btn layui-btn-sm" lay-event="batchDeleted" shiro:hasPermission="dlExamPlan:delete">删除</button>
+  </div>
+</script>
+<!-- 考试计划工具栏 -->
+<script type="text/html" id="tool">
+    <a class="layui-btn layui-btn-xs layui-btn-primary" lay-event="details" shiro:hasPermission="dlExamPlan:details">详情</a>
+    {{# if(d.status == 1){ }}
+        <a class="layui-btn layui-btn-xs " lay-event="edit" shiro:hasPermission="dlExamPlan:update">编辑</a>
+    {{# }else if(d.status == 2){ }}
+        <a class="layui-btn layui-btn-xs  layui-btn-primary" title="导出考试安排" lay-event="export_plan" shiro:hasPermission="dlExamList:list"><i class="layui-icon">&#xe67d;</i></a>
+        <a class="layui-btn layui-btn-xs  layui-btn-primary" title="下载学生安排" lay-event="export_stu" shiro:hasPermission="dlExamList:list"><i class="layui-icon" style="color: #009688;">&#xe601;</i> </a>
+    {{# } }}
+
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del" shiro:hasPermission="dlExamPlan:delete">删除</a>
+</script>
+
+<!-- 课程列表工具栏 -->
+<script type="text/html" id="courseTool">
+    <a class="layui-btn layui-btn-xs" lay-event="edit" shiro:hasPermission="dlExamSubject:update">编辑</a>
+</script>
+
+<!-- 考场列表工具栏 -->
+<script type="text/html" id="roomTool">
+    <a class="layui-btn layui-btn-xs" lay-event="edit" shiro:hasPermission="dlExamRoom:update">编辑</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del" shiro:hasPermission="dlExamRoom:delete">删除</a>
+</script>
+
+<!-- 监考教师列表工具栏 -->
+<script type="text/html" id="teacherTool">
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del" shiro:hasPermission="dlExamTeacher:delete">删除</a>
+</script>
+
+<!-- 考试安排调整工具栏 -->
+<script type="text/html" id="listTool">
+    <a class="layui-btn layui-btn-xs" lay-event="edit" shiro:hasPermission="dlExamList:update">调整安排</a>
+</script>
+
+<!-- 考试安排调整工具栏 -->
+<script type="text/html" id="teaListTool">
+    <a class="layui-btn layui-btn-xs layui-btn-danger" lay-event="edit" shiro:hasPermission="dlExamList:update">更换</a>
+</script>
+
+</body>
+</html>
+<script src="/layui/layui.all.js"></script>
+<script src="/js/core.util.js"></script>
+<script src="/layui/config.js"></script>
+
+<script>
+
+
+
+
+
+
+  //获取token
+  var token = CoreUtil.getData("access_token");
+
+  var gradeDatas = "[[${@dlGradeService.getGrades()}]]".replace(/&quot;/g,"\"");
+  var examTypeDatas = "[[${@sysDictService.getType('exam_type')}]]".replace(/&quot;/g,"\"");
+
+  var examCourseDatas = null;
+
+  var roomTypeDatas = "[[${@sysDictService.getType('classroom_type')}]]".replace(/&quot;/g,"\"");
+  var courseDatas = "[[${@dlCourseService.getJSONList()}]]".replace(/&quot;/g,"\"");
+
+  //地址栏转义token中的#号
+  var tokenQuery = token.replace("#", "%23");
+  var tableIns1;
+  var courseTableIns;
+  var roomTableIns;
+  var examRoomTableIns;
+  var teacherTableIns;
+  var listTeaTableIns;
+  var examTeacherTableIns;
+  var examListTableIns;
+
+  var table = layui.table;
+  var form = layui.form;
+  var layer = layui.layer;
+  var $ = jQuery = layui.jquery;
+  var laydate = layui.laydate;
+  var transfer = layui.transfer;
+  var $step = null;
+
+  //自定义变量
+  var examId = null;
+  var maxTime = 7;
+  var minTime = 0;
+  var examListId = null;
+
+
+  layui.use(['table', 'layer', 'laydate', 'transfer', 'steps'], function () {
+    $step= $("#step_demo").step();
+    //加载考试计划列表
+    tableIns1 = table.render({
+      elem: '#showTable'
+      , contentType: 'application/json'
+      , headers: {"authorization": token}
+
+      , url: '/dlExamPlan/listByPage' //数据接口
+      , method: 'POST'
+      , parseData: function (res) { //将原始数据解析成 table 组件所规定的数据
+        return {
+          "code": res.code, //解析接口状态
+          "msg": res.msg, //解析提示文本
+          "count": CoreUtil.isEmpty(res.data) ? 0 : res.data.total, //解析数据长度
+          "data": CoreUtil.isEmpty(res.data) ? null : res.data.records //解析数据列表
+        }
+      }
+      , cols: [
+        [
+          {type: 'checkbox', fixed: 'left'},
+          {field: 'id', title: '', sort: true, hide: true},
+          {field: 'name', title: '考试标题', sort: true, width: 300},
+          {field: 'timeStart', title: '考试时间',  width: 200, sort: true, templet:
+                "<div>{{layui.util.toDateString(d.timeStart, 'yyyy-MM-dd')}}~{{layui.util.toDateString(d.timeEnd, 'yyyy-MM-dd')}} </div>"
+          },
+          {field: 'status', title: '考试状态', sort: true, templet: function (item) {
+                  if(item.status == 2){
+                      return "已发布";
+                  }else{
+                      return "已保存"
+                  }
+              }},
+            {field: 'resultInputStatus', title: '成绩编辑', sort: true, templet: function (item) {
+                    if (item.resultInputStatus === 1) {
+                        return '  <input type="checkbox" name = "' + item.id + '" value="1" lay-skin="switch" lay-text="开启|关闭" checked  lay-filter="onOff">';
+                    }else{
+                        return '  <input type="checkbox" name = "' + item.id + '" value="2" lay-skin="switch" lay-text="开启|关闭"  lay-filter="onOff">';
+                    }
+                }},
+          {field: 'gradeId', title: '参考年级', sort: true, templet: function (item) {
+                    return CoreUtil.getBeanLabel(gradeDatas, item.gradeId, "id", "gradeNameLabel");
+              }
+          },
+          {field: 'examType', title: '考试类型', sort: true, templet: function (item) {
+                  return CoreUtil.selectDictLabel(examTypeDatas, item.examType);
+              }
+          },
+          {field: 'examDesc', title: '考试描述', sort: true, hide: true},
+          {width: 300, toolbar: "#tool", title: '操作', fixed: 'right'}
+        ]
+      ]
+      ,limit: 10
+      , page: true //开启分页
+      , toolbar: '#toolbar'
+      , defaultToolbar: []
+    });
+
+      form.on('switch(onOff)', function (obj) {
+          var id = this.name;
+          var value = this.value;
+          value = value == 1 ? 2 : 1;  // 状态取反保存
+          CoreUtil.sendPut("/dlExamPlan/update",{id: id, resultInputStatus: value},function (res) {
+              layer.msg("操作成功");
+              search();
+          });
+
+      });
+
+    //课程表格
+      courseTableIns = table.render({
+          elem: '#courseTab'
+          , contentType: 'application/json'
+          , headers: {"authorization": token}
+          , method: 'POST'
+          , parseData: function (res) { //将原始数据解析成 table 组件所规定的数据
+              return {
+                  "code": res.code, //解析接口状态
+                  "msg": res.msg, //解析提示文本
+                  "count": CoreUtil.isEmpty(res.data) ? 0 : res.data.total, //解析数据长度
+                  "data": CoreUtil.isEmpty(res.data) ? null : res.data.records //解析数据列表
+              }
+          }
+          , cols: [
+              [
+                  {field: 'courseId', title: '课程名', sort: true, minWidth: 100, templet: function (item) {
+                          return CoreUtil.getBeanLabel(courseDatas, item.courseId, "id", "name");
+                      }},
+                  {field: 'totalScore', title: '总分', minWidth: 100, sort: true},
+                  {field: 'examDate', title: '考试日期', minWidth: 150, sort: true, templet:
+                      "<div>{{layui.util.toDateString(d.examDate, 'yyyy-MM-dd')}}</div>"
+                  },
+                  {field: 'startTime', title: '考试时间', sort: true, minWidth: 200, templet: function (item) {
+                      var label = "";
+                      if(!CoreUtil.isEmpty(item.startTime)){
+                          label += item.startTime;
+                      }
+                      label += "~";
+                      if(!CoreUtil.isEmpty(item.endTime)){
+                          label += item.endTime;
+                      }
+                        return label;
+                      }
+                  },
+                  {width: 80, toolbar: "#courseTool", title: '操作', fixed: 'right'}
+              ]
+          ]
+          , defaultToolbar: []
+      });
+
+
+      //房间列表表格
+      roomTableIns = table.render({
+          elem: '#roomTable'
+          , contentType: 'application/json'
+          , headers: {"authorization": token}
+          , method: 'POST'
+
+          , parseData: function (res) { //将原始数据解析成 table 组件所规定的数据
+              return {
+                  "code": res.code, //解析接口状态
+                  "msg": res.msg, //解析提示文本
+                  "count": CoreUtil.isEmpty(res.data) ? 0 : res.data.total, //解析数据长度
+                  "data": CoreUtil.isEmpty(res.data) ? null : res.data.records //解析数据列表
+              }
+          }
+          , cols: [
+              [
+                  {field: 'roomType', title: '房间类型', sort: true, minWidth: 100, templet: function (item) {
+                          return CoreUtil.selectDictLabel(roomTypeDatas, item.roomType);
+                      }},
+                  {field: 'roomName', title: '教室名称', minWidth: 150, sort: true},
+                  {field: 'capacity', title: '教室容量', minWidth: 150, sort: true},
+              ]
+          ]
+          , limit: 10
+          , page: true
+          , defaultToolbar: []
+      });
+
+      examRoomTableIns = table.render({
+          elem: '#examRoomTab'
+          , contentType: 'application/json'
+          , headers: {"authorization": token}
+          , method: 'POST'
+          , parseData: function (res) { //将原始数据解析成 table 组件所规定的数据
+              examCourseDatas = JSON.stringify(res.data.records);
+              return {
+                  "code": res.code, //解析接口状态
+                  "msg": res.msg, //解析提示文本
+                  "count": CoreUtil.isEmpty(res.data) ? 0 : res.data.total, //解析数据长度
+                  "data": CoreUtil.isEmpty(res.data) ? null : res.data.records //解析数据列表
+              }
+          }
+          , cols: [
+              [
+                  {field: 'classRoomName', title: '教室名称', minWidth: 150, sort: true},
+                  {field: 'roomName', title: '考场名(教室名)', minWidth: 150, sort: true, edit:'text'},
+                  {field: 'capacity', title: '教室容量', minWidth: 150, sort: true, edit:'text'},
+                  {width: 120, toolbar: "#roomTool", title: '操作', fixed: 'right'}
+              ]
+          ]
+          , defaultToolbar: []
+      });
+
+      table.on('edit(examRoomTab)', function(obj){ //注：edit是固定事件名，test是table原始容器的属性 lay-filter="对应的值"
+          console.log(obj.value); //得到修改后的值
+          console.log(obj.field); //当前编辑的字段名
+          console.log(obj.data); //所在行的所有相关数据
+          if(obj.field == 'capacity'){
+              if(!CoreUtil.isRealNum(obj.value)){
+                  layer.msg("请输入数值");
+                  return;
+              }
+          }
+          var params = {};
+          params[obj.field] = obj.value;
+          params.id = obj.data.id;
+          CoreUtil.sendPut("/dlExamRoom/update", params, function (res) {
+              //loadExamRoomTab(examId);
+              layer.msg("修改成功");
+          });
+
+      });
+
+
+      //教师列表表格
+      teacherTableIns = table.render({
+          elem: '#teacherTable'
+          , contentType: 'application/json'
+          , headers: {"authorization": token}
+          , method: 'POST'
+
+          , parseData: function (res) { //将原始数据解析成 table 组件所规定的数据
+              return {
+                  "code": res.code, //解析接口状态
+                  "msg": res.msg, //解析提示文本
+                  "count": CoreUtil.isEmpty(res.data) ? 0 : res.data.total, //解析数据长度
+                  "data": CoreUtil.isEmpty(res.data) ? null : res.data.records //解析数据列表
+              }
+          }
+          , cols: [
+              [
+                  {field: 'username', title: '工号', sort: true, minWidth: 100},
+                  {field: 'realName', title: '教师名称', minWidth: 150, sort: true},
+                  {field: 'phone', title: '电话', minWidth: 150, sort: true},
+              ]
+          ]
+          , limit: 10
+          , page: true
+          , defaultToolbar: []
+      });
+
+      examTeacherTableIns = table.render({
+          elem: '#examTeacherTab'
+          , contentType: 'application/json'
+          , headers: {"authorization": token}
+          , method: 'POST'
+          , parseData: function (res) { //将原始数据解析成 table 组件所规定的数据
+              return {
+                  "code": res.code, //解析接口状态
+                  "msg": res.msg, //解析提示文本
+                  "count": CoreUtil.isEmpty(res.data) ? 0 : res.data.total, //解析数据长度
+                  "data": CoreUtil.isEmpty(res.data) ? null : res.data.records //解析数据列表
+              }
+          }
+          , cols: [
+              [
+                  {field: 'teacherName', title: '教师名称', minWidth: 150, sort: true},
+                  {field: 'username', title: '工号', minWidth: 150, sort: true},
+                  {width: 120, toolbar: "#teacherTool", title: '操作', fixed: 'right'}
+              ]
+          ]
+          , defaultToolbar: []
+      });
+
+      examListTableIns = table.render({
+          elem: '#examList'
+          , contentType: 'application/json'
+          , headers: {"authorization": token}
+          , method: 'POST'
+          , page: true
+          , parseData: function (res) { //将原始数据解析成 table 组件所规定的数据
+              return {
+                  "code": res.code, //解析接口状态
+                  "msg": res.msg, //解析提示文本
+                  // "count": CoreUtil.isEmpty(res.data) ? 0 : res.data.total, //解析数据长度
+                  "data": CoreUtil.isEmpty(res.data) ? null : res.data //解析数据列表
+              }
+          }
+          , cols: [
+              [
+                  {field: 'courseId', title: '考试科目', minWidth: 150, sort: true, templet: function (item) {
+                        return CoreUtil.getBeanLabel(courseDatas, item.courseId, "id", "name");
+                      }
+                  },
+                  {field: 'examRoomId', title: '考场名称', minWidth: 150, sort: true, templet: function (item) {
+                          return CoreUtil.getBeanLabel(examCourseDatas, item.examRoomId, "id" , "roomName", "classRoomName");
+                      }},
+                  {field: 'examTime', title: '考试日期', minWidth: 150, sort: true},
+                  {field: 'startTime', title: '考试时间', minWidth: 150, sort: true, templet: function (item) {
+                          return item.startTime + "~" + item.endTime;
+                      }},
+                  {field: 'teacherId', title: '监考教师', minWidth: 150, sort: true, templet: function (item) {
+                          var teas = item.teachers;
+                          var html = "";
+                          for(var i = 0; i < teas.length; i ++){
+                              html += "<label class='layui-text'>" + teas[i].teacherName + " </label>";
+                          }
+                          return html;
+                      }
+                  },
+                  {width: 120, toolbar: "#listTool", title: '操作', fixed: 'right'}
+              ]
+          ]
+          , defaultToolbar: []
+      });
+
+
+      listTeaTableIns = table.render({
+          elem: '#listTeaTab'
+          , contentType: 'application/json'
+          , headers: {"authorization": token}
+
+          , method: 'POST'
+          , parseData: function (res) { //将原始数据解析成 table 组件所规定的数据
+              return {
+                  "code": res.code, //解析接口状态
+                  "msg": res.msg, //解析提示文本
+                  "data": res.data //解析数据列表
+              }
+          }
+          , cols: [
+              [
+                  {field: 'teacherName', title: '教师姓名', sort: true},
+                  {width: 120, toolbar: "#teaListTool", title: '操作'}
+              ]
+          ]
+      });
+
+      table.on('tool(listTeaTab)', function (obj) {
+          var data = obj.data;
+          if(obj.event == 'edit'){
+              layer.msg("编辑")
+              editListTeacher(data.id, data.teacherId);
+          }
+      });
+
+
+
+
+      laydate.render({
+          elem: '#time'
+          , type: 'datetime'
+          , min : 0
+          , range: '~'
+          , done: function (value, date, endDate) {
+              if (value != null && value != undefined && value != "") {
+                  $("#timeStart").val(value.split("~")[0]);
+                  $("#timeEnd").val(value.split("~")[1]);
+                  maxTime = value.split("~")[1];
+                  minTime = value.split("~")[0];
+              } else {
+                  $("#timeStart").val("");
+                  $("#timeEnd").val("");
+              }
+          }
+      });
+
+      laydate.render({
+          elem: '#c_examDate',
+          min : minTime,
+      });
+      laydate.render({
+          elem: '#c_examTime',
+          type: "time",
+          range: '~',
+          min: '08:30:00',
+          max: '17:30:00',
+          done: function (value, data, endDate) {
+              if (value != null && value != undefined && value != "") {
+                  $("#c_startTime").val(value.split("~")[0]);
+                  $("#c_endTime").val(value.split("~")[1]);
+              } else {
+                  $("#c_startTime").val("");
+                  $("#c_endTime").val("");
+              }
+          }
+      });
+
+
+      table.on('tool(examList)', function (obj) {
+          var data = obj.data;
+          examListId = data.id;
+
+          if(obj.event == 'edit'){
+              //设置值
+              loadListTeacherTab(data.id);
+              layer.open({
+                  type: 1,
+                  content: $("#editListDiv"),
+                  title: "考务调整",
+                  area: ['500px', '400px'],
+                  btn: ['确定'],
+                  yes: function (index) {
+                      layer.close(index);
+                      loadExamListTab(examId);
+                  }
+              });
+          }
+
+      });
+
+    table.on('tool(courseTab)', function (obj) {
+        console.log(obj.event);
+        var data = obj.data;
+        if(obj.event == "edit"){
+            setCourseTabData(data);
+            layer.open({
+                type : 1,
+                title: "修改课程考试安排",
+                content: $("#editCourseDiv"),
+                btn: ["保存","取消"],
+                yes: function (index, layero) {
+                    var id = $("#c_id").val();
+                    var endTime = $("#c_endTime").val();
+                    var startTime = $("#c_startTime").val();
+                    var examDate = $("#c_examDate").val();
+                    var totalScore = $("#c_totalScore").val();
+                    var params = {
+                        id: id,
+                        examId: examId,
+                        endTime: endTime,
+                        startTime: startTime,
+                        examDate: examDate,
+                        totalScore: totalScore
+                    };
+                    CoreUtil.sendPut("/dlExamSubject/update", params, function (res) {
+                        loadCourseTab(examId);
+                        layer.close(index);
+                        layer.msg("修改成功")
+                    });
+                },
+                btn2: function (index, layero) {
+                    layer.close(index);
+                }
+            });
+        }
+    });
+
+    //考场列表工具栏监听
+      table.on("tool(examRoomTab)", function (obj) {
+          var data = obj.data;
+          switch (obj.event) {
+              case "edit":
+                  //弹出编辑界面
+                  setCourseTabData(data);
+                  $("#r_roomName").val(data.roomName);
+                  $("#r_capacity").val(data.capacity);
+                  $("#r_id").val(data.id);
+                  $("#r_classRoomName").val(data.classRoomName);
+                  layer.open({
+                      type : 1,
+                      title: "修改考场信息",
+                      content: $("#editRoomDiv"),
+                      btn: ["保存","取消"],
+                      yes: function (index, layero) {
+                          var id = $("#r_id").val();
+                          var roomName = $("#r_roomName").val();
+                          var capacity = $("#r_capacity").val();
+                          var params = {
+                              id: id,
+                              roomName: roomName,
+                              capacity: capacity
+                          };
+                          CoreUtil.sendPut("/dlExamRoom/update", params, function (res) {
+                              loadExamRoomTab(examId);
+                              layer.close(index);
+                              layer.msg("修改成功");
+                          });
+                      },
+                      btn2: function (index, layero) {
+                          layer.close(index);
+                      }
+                  });
+                  break;
+              case "del":
+                  var ids = [];
+                  ids.push(obj.data.id);
+                  layer.open({
+                      content: "确定要删除么?",
+                      yes: function(index, layero){
+                          layer.close(index); //如果设定了yes回调，需进行手工关闭
+                          CoreUtil.sendDelete("/dlExamRoom/delete",ids,function (res) {
+                              layer.msg(res.msg, {time:1000},function () {
+                                  loadExamRoomTab(examId);
+                              });
+                          });
+                      }
+                  });
+                  break;
+          }
+      });
+
+
+      table.on('rowDouble(roomTable)', function (obj) {
+          if(CoreUtil.isEmpty(examId)){
+              layer.msg("考试计划ID没有获取到");
+              return;
+          }
+          var data = obj.data;
+          var params = {
+              examId: examId,
+              roomId: data.id,
+              roomName: data.roomName,
+              classRoomName: data.roomName,
+              capacity: data.capacity
+          }
+          CoreUtil.sendPost("/dlExamRoom/add", params, function(res){
+              if(res.code == 0){
+                  layer.msg("添加成功");
+                  loadExamRoomTab(examId);
+              }else{
+                  layer.msg(res.msg);
+              }
+          })
+      });
+
+      table.on('rowDouble(teacherTable)', function (obj) {
+          if(CoreUtil.isEmpty(examId)){
+              layer.msg("考试计划ID没有获取到");
+              return;
+          }
+          var data = obj.data;
+          var params = {
+              examId: examId,
+              teacherId: data.id,
+              teacherName: data.realName,
+              username: data.username
+          }
+          CoreUtil.sendPost("/dlExamTeacher/add", params, function(res){
+              if(res.code == 0){
+                  layer.msg("添加成功");
+                  loadExamTeacherTab(examId);
+              }else{
+                  layer.msg(res.msg);
+              }
+          })
+      });
+
+
+      table.on('tool(examTeacherTab)', function (obj) {
+          switch(obj.event) {
+              case 'del':
+                  var ids = [];
+                  ids.push(obj.data.id);
+                  layer.open({
+                      content: "确定要删除么?",
+                      yes: function(index, layero){
+                          layer.close(index); //如果设定了yes回调，需进行手工关闭
+                          CoreUtil.sendDelete("/dlExamTeacher/delete",ids,function (res) {
+                              layer.msg(res.msg, {time:1000},function () {
+                                  loadExamTeacherTab(examId);
+                              });
+                          });
+                      }
+                  });
+          }
+      });
+
+
+
+
+    //表头工具
+    table.on('toolbar(showTable)', function(obj){
+      switch(obj.event){
+        case 'batchDeleted':
+          var checkStatus = table.checkStatus(obj.config.id);
+          var data = checkStatus.data;
+          if(data.length==0){
+            layer.msg("请选择要批量删除的列");
+          }else {
+            var ids = [];
+            $(data).each(function (index,item) {
+              ids.push(item.id);
+            });
+            tipDialog(ids);
+          }
+          break;
+        case 'add':
+          $(".table_div").hide();
+          $(".step-body").show();
+          $(".title").html("新增");
+          $(".step-body input[name=id]").val("");
+          $(".step-body input[name=name]").val("");
+          $("#timeStart").val("");
+          $("#time").val("");
+          $(".step-body input[name=examDesc]").val("");
+          $("#timeEnd").val("");
+          $(".step-body input[name=status]").val("");
+          $("#gradeId").val("");
+          $("#classType").val("");
+          $("#examType").val("");
+          form.render();
+          break;
+
+      };
+    });
+    //列操作
+    table.on('tool(showTable)',function (obj) {
+      var data = obj.data;
+      switch (obj.event) {
+        case 'del':
+          var ids=[];
+          ids.push(data.id);
+          tipDialog(ids);
+          break;
+        case 'edit':
+          $(".table_div").hide();
+          $(".step-body").show();
+          $(".title").html("编辑");
+          $(".step-body input[name=id]").val(data.id);
+          $(".step-body input[name=name]").val(data.name);
+          $("#timeStart").val(data.timeStart);
+          $(".step-body input[name=examDesc]").val(data.examDesc);
+          $("#timeEnd").val(data.timeEnd);
+          $("#invigilatorNum").val(data.invigilatorNum);
+          $("#termName").val(data.termName);
+            if(!CoreUtil.isEmpty(data.termId)){
+
+                $("#termId").find('option[value="'+data.termId+'"]').prop('selected',true);
+            }
+          $("#time").val(data.timeStart + " ~ " + data.timeEnd);
+
+          $(".step-body input[name=status]").val(data.status);
+          if(!CoreUtil.isEmpty(data.classType)){
+              $("#classType").find('option[value="'+data.classType+'"]').prop('selected',true);
+              loadGradeSelect();
+          }
+
+          if(!CoreUtil.isEmpty(data.gradeId)){
+
+              $("#gradeId").find('option[value="'+data.gradeId+'"]').prop('selected',true);
+          }
+          if(!CoreUtil.isEmpty(data.examType)){
+              $("#examType").find('option[value="'+data.examType+'"]').prop('selected',true);
+          }
+          examId = data.id;
+          form.render();
+          break;
+          case 'details':
+              planDetails(data.id);
+              break;
+
+          case 'export_plan':
+              $.fileDownload("/dlExamList/export?authorization=" + tokenQuery + "&examId=" + data.id, {httpMethod: 'get'});
+              break;
+          case 'export_stu':
+              $.fileDownload("/dlExamStudent/export?authorization=" + tokenQuery + "&examId=" + data.id, {httpMethod: 'get'});
+              break;
+      }
+    });
+
+    //导出
+    $('#export').on('click', function () {
+      //原先分页limit
+      var exportParams = {
+        limit: 10000,
+        key: $("#key").val()
+      };
+      CoreUtil.sendPost("/dlExamPlan/listByPage", exportParams, function (res) {
+        //初始化渲染数据
+        if (res.data != null && res.data.records != null) {
+          table.exportFile(tableIns1.config.id, res.data.records, 'xls');
+        }
+      });
+    });
+
+    //删除
+    var tipDialog=function (ids) {
+      layer.open({
+        content: "确定要删除么?",
+        yes: function(index, layero){
+          layer.close(index); //如果设定了yes回调，需进行手工关闭
+          CoreUtil.sendDelete("/dlExamPlan/delete",ids,function (res) {
+            layer.msg(res.msg, {time:1000},function () {
+              search();
+            });
+          });
+        }
+      });
+    };
+
+    //返回
+    $("#btn_cancel").click(function() {
+      $(".table_div").show();
+      $(".step-body").hide();
+      return false;
+    });
+
+    $("#class_next").click(function () {
+        var examId = $("#id").val();
+        loadCourseTab(examId);
+    });
+
+      $("#courseNext").click(function () {
+          var params = {
+              examId: examId
+          }
+          CoreUtil.sendPost("/dlExamSubject/isComplete", params, function (res) {
+              if(res.data){
+
+                  nextStep();
+                  loadRoomTab();
+                  loadExamRoomTab(examId);
+              }else{
+                  layer.msg("还有考试科目未设置考试时间");
+              }
+          });
+      });
+
+      $("#roomNext").click(function () {
+          var bool = roomIsEnough(examId);
+          console.log("bool:" + bool);
+          if(!bool){
+              layer.msg("考场的容量不够");
+          }else{
+              nextStep();
+              loadTeacherTab();
+              loadExamTeacherTab(examId);
+          }
+      });
+
+      $("#teacherNext").click(function () {
+          var params = {id: examId};
+          CoreUtil.sendPost("/dlExamPlan/checkTeacherIsEnough", params, function (res) {
+              if(res.data){
+                  nextStep();
+                  loadExamListTab(examId);
+              }else{
+                  layer.msg("监考教师人数不够监考");
+              }
+          });
+      });
+
+      //监听保存按钮
+      $("#saveBtn").click(function () {
+          $(".table_div").show();
+          $(".step-body").hide();
+          $step.goStep(1);
+      });
+
+      //监听确认发布按钮
+      $("#sureBtn").click(function () {
+          sureAndRelease(examId);
+      });
+
+
+    //监听保存
+    form.on('submit(submitPlan)', function(data){
+      if(data.field.id===undefined || data.field.id===null || data.field.id===""){
+        CoreUtil.sendPost("/dlExamPlan/add",data.field,function (res) {
+          // $("#add_class_course").show();
+          // $(".step-body").hide();
+          loadTransfer(res);
+          examId = res.data.id;
+        });
+      }else {
+        CoreUtil.sendPut("/dlExamPlan/update",data.field,function (res) {
+            // $("#add_class_course").show();
+            // $(".step-body").hide();
+            loadTransfer(res);
+            examId = res.data.id;
+        });
+      }
+        $step.nextStep();
+      return false;
+    });
+
+      form.on('submit(submit)', function(data){
+
+          $(".table_div").show();
+          // $("#add_class_course").hide();
+          $(".step-body").hide();
+          search();
+          return false;
+      });
+
+      form.on('select(select-class)', function(){
+          loadGradeSelect();
+      });
+      
+      form.on('select(select-term)', function (data) {
+          $("#termName").val(data.elem[data.elem.selectedIndex].text);
+      });
+
+
+    var loadTransfer = function (res) {
+        var gradeId = $("#gradeId").val();
+        var id = res.data.id;
+        var params = {gradeId: gradeId, id: id};
+        //获取班级信息
+        CoreUtil.sendPost("/dlExamPlan/classVoListByGradeId", params, function (result) {
+            var datas = result.data;
+            transfer.render({
+                elem: $("#class_div")
+                , data: datas.beans
+                , title: ['待考班级', '参考班级']
+                , value: datas.values
+                , id: 'classes'
+                , parseData: function (res) {
+                    return {
+                        "value": res.id //数据值
+                        , "title": res.classNo + "班" //数据标题
+                    }
+                }
+                , onchange: function (data, index) {
+                    //新曾
+                    if(index == 0){
+                        for(var i = 0; i < data.length; i ++){
+                            var params = {examId: id, classId: data[i].value, className: data[i].title};
+                            addClass(params);
+                        }
+                    }else{//删除
+                        for(var i = 0; i < data.length; i ++){
+                            removeClass(data[i].value, id);
+                        }
+                    }
+                }
+            })
+        });
+        //获取课程列表信息
+        CoreUtil.sendPost("/dlExamPlan/courseVoListByGradeId", params, function (result) {
+            var datas = result.data;
+            transfer.render({
+                elem: $("#course_div")
+                , data: datas.beans
+                , title: ['待考课程', '参考课程']
+                , value: datas.values
+                , id: 'courses'
+                , parseData: function (res) {
+                    return {
+                        "value": res.id //数据值
+                        , "title": res.name //数据标题
+                    }
+                }
+                , onchange: function (data, index) {
+                    //新曾
+                    if(index == 0){
+                        for(var i = 0; i < data.length; i ++){
+                            var params = {examId: id, courseId: data[i].value, courseName: data[i].title};
+                            addCourse(params);
+                        }
+                    }else{//删除
+                        for(var i = 0; i < data.length; i ++){
+                            removeCourse(data[i].value, id);
+                        }
+                    }
+
+                }
+            })
+        });
+    }
+  });
+
+  function roomIsEnough(examId){
+      var params = {
+          examId: examId
+      }
+      var bool = true;
+      CoreUtil.sendPost("/dlExamRoom/roomIsEnough", params, function (res) {
+          bool = res.data;
+      }, false);
+      return bool;
+  }
+  
+  function editListTeacher(id, teacherId) {
+      var listTeacher = $("#listTeacherId");
+      listTeacher.empty();
+      CoreUtil.sendPost("/dlExamTeacher/getListByExamId", {examId: examId}, function (res) {
+          var data = res.data;
+          for(var i = 0 ; i < data.length; i ++){
+              listTeacher.append("<option value='" + data[i].teacherId + "'>"+ data[i].teacherName + "(" + data[i].username +")</option>")
+          }
+
+      }, false);
+      listTeacher.val(teacherId);
+      listTeacher.find('option[value="' + teacherId + '"]').prop('selected',true);
+      form.render("select");
+      layer.open({
+          type: 1,
+          content: $("#addTeacherDiv"),
+          area: ['400px', '300px'],
+          btn: ['确定', '取消'],
+          yes: function (index) {
+              layer.close(index);
+              var params = {
+                  id: id,
+                  teacherId: $("#listTeacherId").val(),
+                  teacherName: $('#listTeacherId option:selected').text()
+              }
+              CoreUtil.sendPut("/dlExamList/updateTeacher", params, function (res) {
+                  layer.msg("更新成功");
+                  loadListTeacherTab(examListId);
+              });
+          }
+
+      });
+  }
+
+
+  function sureAndRelease(examId) {
+      layer.open({
+          content: "确认发布后将不能再修改，是否确认？如果还可能需要修改，你可以点击保存按钮。",
+          btn: ['确认', "取消"],
+          yes: function (index, layero) {
+              $(".table_div").show();
+              $(".step-body").hide();
+              $step.goStep(1);
+              //确认发布，
+              CoreUtil.sendPost("/dlExamPlan/sureAndRelease",{id: examId}, function (res) {
+                  layer.msg(res.msg);
+                  search();
+              });
+          },
+          btn2: function (index, layero) {
+              layer.close(index);
+          }
+      });
+
+  }
+
+  function planDetails(examId){
+      layer.open({
+          type: 2,
+          content: "/dlExamPlan/details?id="+ examId + "&authorization=" + tokenQuery,
+          area: ['900px', '600px'],
+          btn: ["确认"],
+          shadeClose : true,
+          maxmin: true,
+          yes: function (index, layero) {
+              layer.close(index);
+          }
+      });
+  }
+
+
+
+  function clearCourseTabData(){
+      $("#c_id").val("");
+      $("#c_courseName").val("");
+      $("#c_endTime").val("");
+      $("#c_startTime").val("");
+      $("#c_examTime").val("");
+      $("#c_examDate").val("");
+  }
+
+  function setCourseTabData(data){
+      $("#c_id").val(data.id);
+      $("#c_courseName").val(data.courseName);
+      $("#c_endTime").val(data.endTime);
+      $("#c_startTime").val(data.startTime);
+      $("#c_examDate").val(data.examDate);
+      $("#c_totalScore").val(data.totalScore);
+      if(CoreUtil.isEmpty(data.startTime)){
+          $("#c_examTime").val("");
+      }else{
+          $("#c_examTime").val(data.startTime + " ~ " + data.endTime);
+      }
+
+      form.render();
+  }
+
+
+
+  function loadGradeSelect(){
+      var classType = $("#classType").val();
+      var node = $("#gradeId");
+      node.empty();
+      node.append("<option value=\"\">请选择年级</option>");
+      if(CoreUtil.isEmpty(classType)){
+          return;
+      }
+      CoreUtil.sendPost("/dlGrade/getGradeListByClassType", {type: classType}, function (res) {
+          var data = res.data;
+          for(var i = 0; i < data.length; i ++ ){
+              node.append('<option value="'+ data[i].id +'">' + data[i].gradeName +'级</option>');
+          }
+          form.render("select");
+      }, false);
+  }
+
+
+
+  function preStep(){
+      $step.preStep();
+  }
+
+  function nextStep(){
+      $step.nextStep();
+  }
+
+
+  function addClass(params) {
+      CoreUtil.sendPost("/dlExamClass/add", params ,function (res) {
+      });
+  }
+
+  function removeClass(id, examId) {
+      var params = {
+          classId: id,
+          examId: examId
+      };
+      CoreUtil.sendDelete("/dlExamClass/deleteByClassId", params, function (res) {
+      });
+  }
+
+  function addCourse(params) {
+      CoreUtil.sendPost("/dlExamSubject/add", params ,function (res) {
+          loadCourseTab(examId);
+      });
+  }
+
+  /**
+   * 快速添加监考老师
+   */
+  function addTeachers(){
+      if(CoreUtil.isEmpty(examId)){
+          layer.msg("考试计划ID为空");
+          return;
+      }
+      var params = {
+          examId: examId
+      }
+
+      CoreUtil.sendPost("/dlExamTeacher/addTeachers", params, function (res) {
+          loadExamTeacherTab(examId);
+      });
+  }
+
+
+  /**
+   * 快速添加监考老师
+   */
+  function fastAdd(){
+      if(CoreUtil.isEmpty(examId)){
+          layer.msg("考试计划ID为空");
+          return;
+      }
+      var params = {
+          examPlanId: examId
+      }
+      layer.open({
+          content: "快速排考将要删除之前排的，是否继续?",
+          yes: function (index, layero) {
+              CoreUtil.sendPost("/dlExamList/fastAdd", params, function (res) {
+                  loadExamListTab(examId);
+              });
+              layer.close(index);
+          }
+      });
+
+  }
+  
+  
+  
+
+  function removeCourse(id, examId) {
+      console.log("CourseId:" + id + ", ExamId:" + examId);
+      var params = {
+          courseId: id,
+          examId: examId
+      };
+      CoreUtil.sendDelete("/dlExamSubject/deleteByCourseId", params, function (res) {
+          loadCourseTab(examId);
+      });
+  }
+
+
+  function loadRoomTab() {
+      var roomType = $("#roomType").val();
+      var roomName = $("#roomName").val();
+      //这里以搜索为例
+      roomTableIns.reload({
+          url: "/dlRoom/listByPage",
+          where: { //设定异步数据接口的额外参数，任意设
+              roomType: roomType,
+              roomName: roomName,
+          }, page: {
+              curr: 1 //重新从第 1 页开始
+          }
+      });
+  }
+
+
+  function loadListTeacherTab(listId) {
+      listTeaTableIns.reload({
+          url: '/dlExamList/teacherList', //数据接口
+          where: {
+              id: listId
+          }
+      });
+  }
+
+  function loadExamRoomTab(examId) {
+      if(CoreUtil.isEmpty(examId)){
+          return;
+      }
+      //这里以搜索为例
+      examRoomTableIns.reload({
+          url: "/dlExamRoom/listByPage",
+          where: { //设定异步数据接口的额外参数，任意设
+              examId: examId
+          }
+      });
+  }
+
+
+
+  function loadTeacherTab(){
+      var username = $("#username").val();
+      var realName = $("#realName").val();
+      teacherTableIns.reload({
+          url: "/sys/users",
+          where: {
+              username: username,
+              realName: realName
+          },
+          page: {
+              curr: 1
+          }
+      });
+  }
+
+  function loadExamTeacherTab(examId){
+      if(CoreUtil.isEmpty(examId)){
+          return;
+      }
+      examTeacherTableIns.reload({
+          url: "/dlExamTeacher/listByPage",
+          where: {
+              examId: examId
+          }
+      });
+  }
+
+
+  function loadExamListTab(examId) {
+      if(CoreUtil.isEmpty(examId)){
+          return;
+      }
+      examListTableIns.reload({
+          url: "/dlExamList/listByPage",
+          where: {
+              examPlanId: examId
+          }
+      });
+  }
+
+
+
+
+
+  //执行查询
+  function loadCourseTab(examId) {
+      if(examId == null || examId == undefined || examId == ""){
+          return;
+      }
+      //这里以搜索为例
+      courseTableIns.reload({
+          url: "/dlExamSubject/listByPage",
+          where: { //设定异步数据接口的额外参数，任意设
+              examId: examId
+          }
+      });
+  };
+
+  //执行查询
+  function search() {
+    //这里以搜索为例
+    tableIns1.reload({
+      where: { //设定异步数据接口的额外参数，任意设
+        key: $("#key").val()
+      }
+      , page: {
+        curr: 1 //重新从第 1 页开始
+      }
+    });
+  };
+
+
+
+
+
+
+</script>
+<script src="/js/jquery.fileDownload.js"></script>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="/layui/css/layui.css">
+    <link rel="stylesheet" href="/css/custom.form.css">
+</head>
+<body>
+    <!-- 基本信息 -->
+    <div class="layui-card-body layui-form">
+        <h2 style="text-align: center"><label th:text="${plan.bean.name}" style="font-weight: bold"></label></h2>
+        <br>
+        <table class="layui-table" lay-even="" lay-skin="row">
+            <tbody>
+                <tr>
+                    <td width="50%">参考年级: <label th:text="${plan.bean.gradeId}"></label></td>
+                    <td width="50%">考场监考人数: <label th:text="${plan.bean.invigilatorNum}"></label></td>
+                </tr>
+                <tr>
+                    <td colspan="2">考试时间: <label th:text="${#dates.format(plan.bean.timeStart,'yyyy-MM-dd')} + ' ~ ' + ${#dates.format(plan.bean.timeEnd,'yyyy-MM-dd')}"></label></td>
+                </tr>
+                <tr>
+                    <td colspan="2">考试描述: <label th:text="${plan.bean.examDesc}"></label></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <!-- 参考课程与班级、监考教师 -->
+    <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+        <legend>参考课程与班级、监考教师</legend>
+    </fieldset>
+    <div class="layui-row layui-col-space5">
+        <div class="layui-col-sm3 layui-col-md3 layui-col-lg3">
+            <table class="layui-table" lay-even="" lay-skin="row" width="auto;">
+                <thead>
+                    <tr>
+                        <th>参考课程</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="course: ${plan.courseList}">
+                        <td th:text="${course.courseName}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="layui-col-sm2 layui-col-md2 layui-col-lg2">
+            <table class="layui-table" lay-even="" lay-skin="row" width="auto;">
+                <thead>
+                    <tr>
+                        <th>参考班级</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="clazz: ${plan.classList}">
+                        <td th:text="${clazz.className}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="layui-col-sm3 layui-col-md3 layui-col-lg3">
+            <table class="layui-table" lay-even="" lay-skin="row" width="auto;">
+                <thead>
+                    <tr>
+                        <th>监考教师</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="tea: ${plan.teacherList}">
+                        <td th:text="${tea.teacherName}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="layui-col-sm3 layui-col-md3 layui-col-lg3" >
+            <table class="layui-table" lay-even="" lay-skin="row" width="auto;">
+                <thead>
+                <tr>
+                    <th>考场信息</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="room: ${plan.roomList}">
+                    <td th:text="${room.roomName + '(' + room.classRoomName + ')'}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 监考安排列表 -->
+    <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
+        <legend>监考安排列表</legend>
+    </fieldset>
+    <div>
+        <table class="layui-table" lay-even="" lay-skin="row" >
+            <thead>
+            <tr>
+                <th>考场</th>
+                <th>科目</th>
+                <th>监考教师</th>
+                <th>考试日期</th>
+                <th>考试时间</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="list: ${plan.listList}">
+                <td th:text="${list.examRoomId}"></td>
+                <td th:text="${list.courseId}"></td>
+                <td>
+                    <label th:each="tea: ${list.teachers}" style="margin-right: 7px;"><span th:text="${tea.teacherName}"></span></label>
+                </td>
+                <td th:text="${#dates.format(list.examTime , 'yyyy-MM-dd')}"></td>
+                <td th:text="${#dates.format(list.startTime, 'HH:mm:ss')} + ' ~ ' + ${#dates.format(list.endTime, 'HH:mm:ss')}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.company.project.mapper.DlCourseTableMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.company.project.entity.DlCourseTableEntity" id="dlCourseTableMap">
+        <result property="id" column="id"/>
+        <result property="row" column="row"/>
+        <result property="col" column="col"/>
+        <result property="baseId" column="base_id"/>
+        <result property="arrId" column="arr_id"/>
+        <result property="teacherId" column="teacher_id"/>
+        <result property="classId" column="class_id"/>
+        <result property="courseId" column="course_id"/>
+        <result property="teacherName" column="teacher_name"/>
+        <result property="className" column="class_name"/>
+        <result property="courseName" column="course_name"/>
+        <result property="week" column="week"/>
+        <result property="termId" column="term_id"/>
+    </resultMap>
+
+
+    <delete id="deleteByArrId" parameterType="String">
+        delete from dl_course_table where arr_id=#{arrId}
+    </delete>
+
+    <select id="getTermCountGroupByTeacherId" parameterType="String" resultMap="dlCourseTableMap">
+        select teacher_id,count(teacher_id) as week from dl_course_table where term_id=#{termId} group By teacher_id;
+    </select>
+
+    <select id="getCountByConditions" resultType="int" parameterType="com.company.project.entity.DlCourseTableEntity">
+        select count(*) from dl_course_table
+        <where>
+            <if test="termId != null and termId != ''">
+                and term_id=#{termId}
+            </if>
+            <if test="col != null">
+                and col=#{col}
+            </if>
+            <if test="row != null">
+                and row=#{row}
+            </if>
+            <if test="teacherId != null and teacherId != ''">
+                and teacher_id=#{teacherId}
+            </if>
+        </where>
+    </select>
+
+
+</mapper>

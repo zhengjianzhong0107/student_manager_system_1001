@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <link rel="stylesheet" href="/layui/css/layui.css">
+  <link rel="stylesheet" href="/css/custom.form.css">
+    <style>
+        .layui-table-cell {
+            font-size:14px;
+            padding:0 5px;
+            height:auto;
+            overflow:visible;
+            text-overflow:inherit;
+            white-space:normal;
+            word-break: break-all;
+        }
+
+        .btn-backgroud-color{
+            background-color: #5FB878;
+        }
+    </style>
+</head>
+<body>
+<div class="panel panel-default operation" hidden>
+  <div class="panel-heading title"></div>
+<div class="layui-card-body">
+<form class="layui-form " action="" lay-filter="info" style="width: auto;margin-top: 10px">
+    <input name="id" hidden/>
+
+    <div class="layui-form-item">
+        <div class="layui-inline">
+        <label class="layui-form-label">试题类别</label>
+        <div class="layui-input-inline">
+            <select id="questionType" name="questionType" lay-filter="select-type" th:with="list=${@dlQuestionTypeService.getList()}" lay-search>
+                <option value="">请选择</option>
+                <option th:each="bean : ${list}" th:text="${bean.typeName}" th:value="${bean.id}"></option>
+            </select>
+        </div>
+        </div>
+        <div class="layui-inline">
+        <label class="layui-form-label">适用年级</label>
+        <div class="layui-input-inline">
+            <select id="gradeType" name="gradeType" lay-filter="select-grade">
+                <option value="">请选择</option>
+            </select>
+        </div>
+        </div>
+        <div class="layui-inline">
+        <label class="layui-form-label">科目</label>
+        <div class="layui-input-inline">
+            <select id="subjectId" name="subjectId" lay-filter="select-type">
+                <option value="">请选择</option>
+            </select>
+        </div>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">试题</label>
+        <div class="layui-input-block">
+            <textarea type="content" id="content" name="content" placeholder="请输入内容" autocomplete="off" class="layui-textarea"></textarea>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">答案</label>
+        <div class="layui-input-block">
+            <textarea name="answer" id="answer" placeholder="请输入答案" autocomplete="off" class="layui-textarea"></textarea>
+        </div>
+    </div>
+    <!--
+    <div class="layui-form-item">
+        <label class="layui-form-label">知识点</label>
+        <div class="layui-input-block">
+            <input type="knowledgeId" name="knowledgeId" placeholder="请输入知识点" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+     -->
+    <div class="layui-form-item">
+        <label class="layui-form-label">是否私有</label>
+        <div class="layui-input-inline">
+            <input type="checkbox" name="self" id="self" value="1" lay-skin="switch" lay-text="私有|公有" checked  lay-filter="onOff">
+        </div>
+        <label class="layui-form-label">难易程度</label>
+        <div class="layui-input-inline">
+            <select id="difficulty" name="difficulty" lay-filter="select-type" th:with="classType=${@sysDictService.getType('difficulty')}">
+                <option value="">请选择</option>
+                <option th:each="dict : ${classType}" th:text="${dict.label}" th:value="${dict.value}"></option>
+            </select>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">备注</label>
+        <div class="layui-input-block">
+            <input type="remark" name="remark" placeholder="请输入" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+
+  <div class="layui-form-item">
+  <div class="layui-input-block">
+    <button type="submit" class="layui-btn" lay-submit="" lay-filter="submit">保存</button>
+    <button  class="layui-btn layui-btn-primary" id="btn_cancel">返回</button>
+  </div>
+</div>
+</form>
+</div>
+</div>
+<div class="layui-fluid">
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-sm12 layui-col-md3 layui-col-lg2">
+            <div class="layui-card">
+                <div class="layui-card-body mini-bar layui-form" id="leftTree" style="position: fixed">
+                    <div class="layui-col-sm12 layui-col-md3 layui-col-lg2">
+                        <div class="layui-form-item">
+                            <div class="layui-input-inline">
+                            <input type="text" id="s_content" class="layui-input"  autocomplete="off" placeholder="请输入试题名">
+                            </div>
+                        </div>
+                        <!--
+                        <div class="layui-form-item">
+                            类别
+                            <div class="layui-input-inline">
+                            <select id="s_questionType" name="s_questionType" lay-filter="select-type" th:with="list=${@dlQuestionTypeService.getList()}" lay-search>
+                                <option value="">请选择</option>
+                                <option th:each="bean : ${list}" th:text="${bean.typeName}" th:value="${bean.id}"></option>
+                            </select>
+                            </div>
+                        </div>
+                        -->
+                        <div class="layui-form-item">
+                            年级
+                            <div class="layui-input-inline">
+                                <select id="s_gradeType" name="s_gradeType" lay-filter="select-grade-s" >
+                                    <option value="">请选择</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            科目
+                            <div class="layui-input-inline">
+                                <select id="s_subjectId" name="s_subjectId" lay-filter="select-type">
+                                    <option value="">请选择</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="layui-form-item ">
+                            <button class="layui-btn" onclick="search()"  id="search">查询</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-sm12 layui-col-md9 layui-col-lg10">
+            <div class="table_div">
+              <div id="searchParam"  shiro:hasPermission="dlQuestionBank:list">
+                  <div class="layui-row">
+                      <div class="layui-col-sm12 layui-col-md12 layui-col-lg8">
+                            <div id="search_item" class="layui-form-item">
+                            </div>
+                      </div>
+                  </div>
+              </div>
+              <table class="layui-table" id="showTable" lay-filter="showTable" ></table>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/html" id="toolbar">
+  <div class="layui-btn-container">
+    <button class="layui-btn layui-btn-sm" lay-event="add"  shiro:hasPermission="dlQuestionBank:add">添加</button>
+  </div>
+</script>
+<script type="text/html" id="tool">
+  <a class="layui-btn layui-btn-xs" lay-event="edit" shiro:hasPermission="dlQuestionBank:update">编辑</a>
+  <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del" shiro:hasPermission="dlQuestionBank:delete">删除</a>
+</script>
+
+
+<script type="text/html" id="_content">
+    <div>
+        <div>
+            {{d.content}}
+        </div>
+        <div style="font-size: x-small; text-align: center" class="layui-form-item">
+            <label class="ayui-form-label" style="margin-left: 20px;">
+                难度:{{ layui.laytpl.getDifficulty(d.difficulty) }}
+            </label>
+            <label class="ayui-form-label" style="margin-left: 20px;">{{# if(d.self == 1){}}私有{{# } else{}}公有{{# }}}</label>
+            <label class="ayui-form-label" style="margin-left: 20px;">创建时间:{{ d.createTime }}</label>
+        </div>
+    </div>
+</script>
+
+</body>
+</html>
+<script src="/layui/layui.all.js"></script>
+<script src="/js/core.util.js"></script>
+<script>
+  //获取token
+  var token = CoreUtil.getData("access_token");
+
+  var gradeData = "[[${@sysDictService.getType('grade')}]]".replace(/&quot;/g,"\"");
+
+  var classTypeData = "[[${@sysDictService.getType('class_type')}]]".replace(/&quot;/g,"\"");
+  var difficultyData = "[[${@sysDictService.getType('difficulty')}]]".replace(/&quot;/g,"\"");
+  var questionTypeData = "[[${@dlQuestionTypeService.getList()}]]".replace(/&quot;/g,"\"");
+
+
+
+  //地址栏转义token中的#号
+  var tokenQuery = token.replace("#", "%23");
+  var tableIns1;
+  var table = layui.table;
+  var form = layui.form;
+  var layer = layui.layer;
+  var $ = jQuery = layui.jquery;
+  var laydate = layui.laydate;
+  var layedit = layui.layedit;
+  var laytpl = layui.laytpl;
+
+  //自定义变量
+  var classType = null;
+  var content_index = null;
+  var answer_index = null;
+  var questionTypeId = null;
+
+  layui.use(['table', 'layer', 'laydate'], function () {
+      loadQuestionTypeButton($("#search_item"));
+      loadGradeTypeSelect($("#gradeType"));//渲染年级下拉框
+      loadGradeTypeSelect($("#s_gradeType"));
+      layedit.set({
+          uploadImage: {
+              url: "/sysFiles/upload?authorization=" + tokenQuery,
+              type: "post"
+          }
+      });
+      content_index = layedit.build('content');
+      answer_index = layedit.build('answer');
+      //加载table
+    tableIns1 = table.render({
+      elem: '#showTable'
+      , contentType: 'application/json'
+      , headers: {"authorization": token}
+      , page: true //开启分页
+      , url: '/dlQuestionBank/listByPage' //数据接口
+      , method: 'POST'
+      , parseData: function (res) { //将原始数据解析成 table 组件所规定的数据
+        return {
+          "code": res.code, //解析接口状态
+          "msg": res.msg, //解析提示文本
+          "count": CoreUtil.isEmpty(res.data) ? 0 : res.data.total, //解析数据长度
+          "data": CoreUtil.isEmpty(res.data) ? null : res.data.records //解析数据列表
+        }
+      }
+      , cols: [
+        [
+          {type: 'numbers', fixed: 'left', hide: true},
+          {field: 'id', title: '', sort: true, hide: true},
+          {toolbar: '#_content', title: '试题', sort: false},
+          {width: 120, toolbar: "#tool", title: '操作'}
+        ]
+      ]
+      , toolbar: '#toolbar'
+    });
+
+
+    //表头工具
+    table.on('toolbar(showTable)', function(obj){
+      switch(obj.event){
+        case 'batchDeleted':
+          var checkStatus = table.checkStatus(obj.config.id);
+          var data = checkStatus.data;
+          if(data.length==0){
+            layer.msg("请选择要批量删除的列");
+          }else {
+            var ids = [];
+            $(data).each(function (index,item) {
+              ids.push(item.id);
+            });
+            tipDialog(ids);
+          }
+          break;
+        case 'add':
+          $(".table_div").hide();
+          $(".operation").show();
+          $(".title").html("新增");
+          $(".operation input[name=id]").val("");
+          $("#questionType").val("");
+          $("#subjectId").val("");
+
+            layedit.setContent(content_index, "");
+          $("#gradeType").val("");
+            layedit.setContent(answer_index, "");
+          $(".operation input[name=remark]").val("");
+          $("#self").prop("checked", true).val(1);
+          $("#difficulty").val("");
+          form.render();
+          break;
+      };
+    });
+    //列操作
+    table.on('tool(showTable)',function (obj) {
+      var data = obj.data;
+      switch (obj.event) {
+        case 'del':
+          var ids=[];
+          ids.push(data.id);
+          tipDialog(ids);
+          break;
+        case 'edit':
+          $(".table_div").hide();
+          $(".operation").show();
+          $(".title").html("编辑");
+          $(".operation input[name=id]").val(data.id);
+          $("#questionType").val(data.questionType);
+            if(!CoreUtil.isEmpty(data.questionType)){
+                $("#questionType").find('option[value="'+data.questionType+'"]').prop('selected',true);
+            }
+            if(!CoreUtil.isEmpty(data.gradeType)){
+                classType = data.gradeType;
+                $("#gradeType").find('option[value="'+data.gradeType+'"]').prop('selected',true);
+            }
+
+            if(!CoreUtil.isEmpty(data.subjectId)){
+                loadSubjectSelect($("#subjectId"));
+                $("#subjectId").val(data.subjectId);
+                $("#subjectId").find('option[value="'+data.subjectId+'"]').prop('selected',true);
+            }
+            layedit.setContent(content_index, data.content, false);
+            layedit.setContent(answer_index, data.answer, false);
+          $(".operation input[name=remark]").val(data.remark);
+          if(!CoreUtil.isEmpty(data.self)){
+              if(data.self == 1){
+                $("#self").prop("checked", true).val(data.self);
+              }else{
+                  $("#self").prop("checked", false).val(data.self);
+              }
+          }
+            if(!CoreUtil.isEmpty(data.difficulty)){
+                $("#difficulty").find('option[value="'+data.difficulty+'"]').prop('selected',true);
+            }
+          form.render();
+          break;
+      }
+    });
+
+    //导出
+    $('#export').on('click', function () {
+      //原先分页limit
+      var exportParams = {
+        limit: 10000,
+        key: $("#key").val()
+      };
+      CoreUtil.sendPost("/dlQuestionBank/listByPage", exportParams, function (res) {
+        //初始化渲染数据
+        if (res.data != null && res.data.records != null) {
+          table.exportFile(tableIns1.config.id, res.data.records, 'xls');
+        }
+      });
+    });
+
+    //删除
+    var tipDialog=function (ids) {
+      layer.open({
+        content: "确定要删除么?",
+        yes: function(index, layero){
+          layer.close(index); //如果设定了yes回调，需进行手工关闭
+          CoreUtil.sendDelete("/dlQuestionBank/delete",ids,function (res) {
+            layer.msg(res.msg, {time:1000},function () {
+              search();
+            });
+          });
+        }
+      });
+    };
+
+    //返回
+    $("#btn_cancel").click(function() {
+      $(".table_div").show();
+      $(".operation").hide();
+      return false;
+    });
+
+    //监听保存
+      form.on('select(select-grade-s)', function (data) {
+          classType = $("#s_gradeType").val();
+          if(classType == ""){
+              $("#s_subjectId").empty();
+              return;
+          }
+          loadSubjectSelect($("#s_subjectId"));
+      });
+
+    form.on('select(select-grade)', function (data) {
+        classType = $("#gradeType").val();
+        loadSubjectSelect($("#subjectId"));
+    });
+
+    form.on('switch(onOff)', function(data){
+        $("#self").attr('type', 'hidden').val(this.checked ? 1 : 2);
+    })
+      
+      
+    form.on('submit(submit)', function(data){
+        data.field.content = layedit.getContent(content_index);
+        console.log(layedit.getContent(content_index));
+        data.field.answer = layedit.getContent(answer_index);
+      if(data.field.id===undefined || data.field.id===null || data.field.id===""){
+        CoreUtil.sendPost("/dlQuestionBank/add",data.field,function (res) {
+          $(".table_div").show();
+          $(".operation").hide();
+          search();
+        });
+      }else {
+
+        CoreUtil.sendPut("/dlQuestionBank/update",data.field,function (res) {
+          $(".table_div").show();
+          $(".operation").hide();
+          search();
+        });
+      }
+
+      return false;
+    });
+  });
+
+
+  function loadQuestionTypeButton(node){
+      console.log(questionTypeData);
+      var types = JSON.parse(questionTypeData);
+      for(var i = 0; i < types.length; i ++){
+          console.log(types[i].id);
+          node.append("<a id='"+ types[i].id+"' class='layui-btn layui-btn-radius layui-btn-primary' href='#'>"+ types[i].typeName +"</a>")
+      }
+  }
+
+
+
+  laytpl.getDifficulty = function(value){
+
+      var difficultyDatas = JSON.parse(difficultyData);
+      for(var i = 0; i < difficultyDatas.length; i++){
+          if(difficultyDatas[i].value == value){
+              return difficultyDatas[i].label;
+          }
+      }
+  };
+
+
+
+  $(function(){
+      $("#search_item a").click(function(){
+          $("#search_item a").eq($(this).index()).addClass("btn-backgroud-color").siblings().removeClass("btn-backgroud-color");
+          questionTypeId = $(this)[0].id;
+          search();
+      })
+  })
+
+  function loadSubjectSelect(node) {
+      if(classType == null){
+          layer.msg("发生错误了");
+          return;
+      }
+      var params = {
+          grade: classType
+      }
+      CoreUtil.sendPost("/dlCourse/getListByClassType", params, function (res) {
+          node.empty();
+          node.append("<option value=\"\">请选择</option>");
+          var data = res.data;
+          for(var i = 0; i < data.length; i ++ ){
+              node.append('<option value="'+ data[i].id +'">' + data[i].name +'</option>');
+          }
+          form.render("select");
+      }, false);
+  }
+
+  function loadGradeTypeSelect(node) {
+      var classTypeDatas = JSON.parse(classTypeData);
+      var gradeDatas = JSON.parse(gradeData);
+      //var node = $("#gradeType");
+      for(var j = 0; j < classTypeDatas.length; j ++){
+          var optgroup = "<optgroup label=" + classTypeDatas[j].label + ">";
+          for(var i = 0; i < gradeDatas.length; i++){
+              if(Math.floor(gradeDatas[i].value / 1000) == classTypeDatas[j].value){
+                  optgroup += "<option value=" + gradeDatas[i].value + ">" + gradeDatas[i].label+ "</option>";
+              }
+          }
+          optgroup += "</optgroup>";
+          node.append(optgroup);
+      }
+      form.render("select");
+  }
+
+
+
+
+  //执行查询
+  function search() {
+      var gradeType = $("#s_gradeType").val();
+      var subjectId = $("#s_subjectId").val();
+      var content = $("#s_content").val();
+      //这里以搜索为例
+      tableIns1.reload({
+          where: { //设定异步数据接口的额外参数，任意设
+              questionType: questionTypeId,
+              gradeType: gradeType,
+              subjectId: subjectId,
+              content: content
+          }
+          , page: {
+              curr: 1 //重新从第 1 页开始
+          }
+      });
+  };
+</script>

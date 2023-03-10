@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="/layui/css/layui.css">
+    <link rel="stylesheet" href="/css/custom.form.css">
+    <link rel="stylesheet" href="/layui/extend/steps/style.css">
+    <link rel="stylesheet" href="/css/jquery.dad.css">
+    <style>
+
+        .fixed_div{
+            position:fixed;
+            right:0px;
+            bottom:50%;
+        }
+
+        .fixed_btn{
+            position:fixed;
+            right:100px;
+            bottom:0px;
+        }
+    </style>
+</head>
+<body>
+
+
+<!-- 添加编辑大题的界面--弹出层  -->
+<div class="panel panel-default" id="add_item" hidden>
+    <form class="layui-form" style="width: auto; margin-top: 10px">
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">试题类别</label>
+            <div class="layui-input-inline">
+                <select id="a_questionType" required  name="a_questionType" lay-filter="select-question-type" th:with="list=${@dlQuestionTypeService.getList()}" lay-search>
+                    <option value="">请选择</option>
+                    <option th:each="bean : ${list}" th:text="${bean.typeName}" th:value="${bean.id}"></option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">大题名称</label>
+                <div class="layui-input-inline">
+                    <input  id="a_name" name="a_name" required  placeholder="请输入" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">小题个数</label>
+                <div class="layui-input-inline">
+                    <input  id="a_questionNum" name="a_questionNum"  placeholder="请输入" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">总分</label>
+                <div class="layui-input-inline">
+                    <input  id="a_score" name="a_score"  placeholder="请输入" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">大题描述</label>
+            <div class="layui-input-block">
+                <input  id="a_questionDesc" name="a_questionDesc" placeholder="请输入" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+    </form>
+
+</div>
+
+<!-- 大题目录 -->
+<div id="catalog" class="panel panel-default">
+
+</div>
+
+
+
+<!-- 添加编辑小题的界面--弹出层 -->
+<div id="add_detail" class="panel panel-default" hidden>
+    <form class="layui-form">
+        <div class="layui-form-item">
+
+
+        </div>
+    </form>
+
+</div>
+
+
+<div class="step-body" hidden id="step_demo">
+    <div class="step-header" style="width:80%;overflow: hidden;">
+        <ul>
+            <li>
+                <span class="step-name">基本信息设置</span>
+            </li>
+            <li>
+                <span class="step-name">试题编辑</span>
+            </li>
+            <li>
+                <span class="step-name">完成</span>
+            </li>
+        </ul>
+    </div>
+
+    <br>
+    <div class="step-content">
+        <div class="step-list">
+            <form class="layui-form " action="" lay-filter="info" style="width: auto;margin-top: 0px">
+                <input name="id" hidden/>
+                <input name="code" hidden>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">试卷名称</label>
+                    <div class="layui-input-inline">
+                        <input type="testName" name="testName" required  placeholder="请输入试卷名称" autocomplete="off" class="layui-input">
+                    </div>
+                    <label class="layui-form-label">考试时长</label>
+                    <div class="layui-input-inline">
+                        <input type="duration" name="duration" placeholder="请输入考试时长" autocomplete="off" class="layui-input">
+                    </div>
+                    <label class="layui-form-label">试卷总分</label>
+                    <div class="layui-input-inline">
+                        <input type="score" name="score" placeholder="请输入试卷总分" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">私有</label>
+                    <div class="layui-input-inline">
+                        <input type="checkbox" name="self" id="self" value="1" lay-skin="switch" lay-text="私有|公有" checked  lay-filter="onOff">
+                    </div>
+                    <label class="layui-form-label">适用年级</label>
+                    <div class="layui-input-inline">
+                        <select id="gradeType" name="gradeType" lay-filter="select-grade">
+                            <option value="">请选择</option>
+                        </select>
+                    </div>
+                    <label class="layui-form-label">科目</label>
+                    <div class="layui-input-inline">
+                        <select id="subjectId" name="subjectId" lay-filter="select-type">
+                            <option value="">请选择</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">注意事项</label>
+                    <div class="layui-input-block">
+                        <textarea type="notes" name="notes" placeholder="请输入注意事项" autocomplete="off" class="layui-textarea"></textarea>
+                    </div>
+                </div>
+                <div class="layui-form-item fixed_btn">
+                    <div class="layui-input-block ">
+                        <button type="submit" class="layui-btn" lay-submit="" lay-filter="submit">下一步</button>
+                        <button  class="layui-btn layui-btn-primary" id="btn_cancel">返回</button>
+                    </div>
+                </div>
+            </form>
+
+        </div>
+        <div class="step-list">
+            <!-- 试卷编辑的界面  -->
+
+            <div>
+                <div>
+                    <h1 id="title" style="text-align: center"></h1>
+                </div>
+                <hr class="layui-bg-green">
+            </div>
+            <div id="add_list">
+
+
+            </div>
+            <div class="layui-form-item fixed_btn">
+                <div class="layui-input-block">
+                    <button  class="layui-btn layui-btn-primary" id="btn_pre" onclick="preStep();">上一步</button>
+                    <button type="submit" class="layui-btn" lay-submit="" >完成</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="table_div">
+    <div id="searchParam"  shiro:hasPermission="dlTest:list">
+        <div class="layui-form-item">
+            <div class="layui-input-inline">
+                <input type="text" id="key" class="layui-input"  autocomplete="off" placeholder="请输入">
+            </div>
+
+            <div class="layui-input-inline ">
+                <button class="layui-btn" onclick="search()"  id="search">查询</button>
+                <button class="layui-btn"   id="export">导出全部</button>
+            </div>
+        </div>
+
+    </div>
+    <table class="layui-table" id="showTable" lay-filter="showTable" ></table>
+</div>
+<script type="text/html" id="toolbar">
+    <div class="layui-btn-container">
+        <button class="layui-btn layui-btn-sm" lay-event="add"  shiro:hasPermission="dlTest:add">添加</button>
+        <button class="layui-btn layui-btn-sm" lay-event="batchDeleted" shiro:hasPermission="dlTest:delete">删除</button>
+    </div>
+</script>
+<script type="text/html" id="tool">
+    <a class="layui-btn layui-btn-xs" lay-event="edit" shiro:hasPermission="dlTest:update">编辑</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del" shiro:hasPermission="dlTest:delete">删除</a>
+</script>
+
+</body>
+</html>
+<script src="/layui/layui.all.js"></script>
+<script src="/js/core.util.js"></script>
+<script src="/layui/config.js"></script>
+<script src="/js/jquery-1.11.3.min.js"></script>
+<script src="/js/jquery.dad.min.js"></script>
+
+<script>
+    //获取token
+    var token = CoreUtil.getData("access_token");
+    var gradeData = "[[${@sysDictService.getType('grade')}]]".replace(/&quot;/g,"\"");
+
+    var classTypeData = "[[${@sysDictService.getType('class_type')}]]".replace(/&quot;/g,"\"");
+
+    var subjectData = "[[${@dlCourseService.getJSONList()}]]".replace(/&quot;/g,"\"");
+
+
+    //地址栏转义token中的#号
+    var tokenQuery = token.replace("#", "%23");
+    var tableIns1;
+    var table = layui.table;
+    var form = layui.form;
+    var layer = layui.layer;
+    var $ = jQuery = layui.jquery;
+    var laydate = layui.laydate;
+
+
+    var $step = null;
+
+    //自定义变量
+    var classType = null;
+    var windowIndex = null;
+
+    layui.use(['table', 'layer', 'laydate', 'steps'], function () {
+        $step= $("#step_demo").step();
+        //$('#add_list').dad();
+
+        loadGradeTypeSelect($("#gradeType"));//渲染年级下拉框
+        //加载table
+        tableIns1 = table.render({
+            elem: '#showTable'
+            , contentType: 'application/json'
+            , headers: {"authorization": token}
+            , page: true //开启分页
+            , url: '/dlTest/listByPage' //数据接口
+            , method: 'POST'
+            , parseData: function (res) { //将原始数据解析成 table 组件所规定的数据
+                return {
+                    "code": res.code, //解析接口状态
+                    "msg": res.msg, //解析提示文本
+                    "count": CoreUtil.isEmpty(res.data) ? 0 : res.data.total, //解析数据长度
+                    "data": CoreUtil.isEmpty(res.data) ? null : res.data.records //解析数据列表
+                }
+            }
+            , cols: [
+                [
+                    {type: 'checkbox', fixed: 'left'},
+                    {field: 'id', title: '', sort: true, hide: true},
+                    {field: 'code', title: '试卷编号', sort: true},
+                    {field: 'testName', title: '试卷名称', sort: true},
+                    {field: 'notes', title: '注意事项', sort: true, hide: true},
+                    {field: 'duration', title: '考试时长', sort: true},
+                    {field: 'score', title: '试卷总分', sort: true},
+                    {field: 'self', title: '私有', sort: true, templet: function (item) {
+                            return item.self==1? "私有": "公有";
+                        }
+                    },
+                    {field: 'subjectId', title: '科目ID', sort: true, templet: function (item) {
+
+                            return CoreUtil.getBeanLabel(subjectData, item.subjectId, "id", "name");
+                        }
+                    },
+                    {field: 'gradeType', title: '适用年级', sort: true, templet: function (item) {
+                            return CoreUtil.selectDictLabel(gradeData, item.gradeType);
+                        }
+                    },
+                    {width: 120, toolbar: "#tool", title: '操作'}
+                ]
+            ]
+            , toolbar: '#toolbar'
+        });
+
+        table.on('rowDouble()', function (obj) {
+            layer.msg(JSON.parse(obj));
+        })
+
+
+        //表头工具
+        table.on('toolbar(showTable)', function(obj){
+            switch(obj.event){
+                case 'batchDeleted':
+                    var checkStatus = table.checkStatus(obj.config.id);
+                    var data = checkStatus.data;
+                    if(data.length==0){
+                        layer.msg("请选择要批量删除的列");
+                    }else {
+                        var ids = [];
+                        $(data).each(function (index,item) {
+                            ids.push(item.id);
+                        });
+                        tipDialog(ids);
+                    }
+                    break;
+                case 'add':
+                    $(".table_div").hide();
+                    $(".step-body").show();
+                    $(".title").html("新增");
+                    $(".operation input[name=id]").val("");
+                    $(".operation input[name=code]").val("");
+                    $(".operation input[name=testName]").val("");
+                    $(".operation input[name=notes]").val("");
+                    $(".operation input[name=duration]").val("");
+                    $(".operation input[name=score]").val("");
+                    $("#self").prop("checked", true).val(1);
+
+
+                    $("#gradeType").val("");
+                    $("#subjectId").val("");
+                    form.render();
+                    break;
+            };
+        });
+        //列操作
+        table.on('tool(showTable)',function (obj) {
+            var data = obj.data;
+            switch (obj.event) {
+                case 'del':
+                    var ids=[];
+                    ids.push(data.id);
+                    tipDialog(ids);
+                    break;
+                case 'edit':
+                    $(".table_div").hide();
+                    $(".step-body").show();
+                    $(".title").html("编辑");
+                    $(".step-body input[name=id]").val(data.id);
+                    $(".step-body input[name=code]").val(data.code);
+                    $(".step-body input[name=testName]").val(data.testName);
+                    $(".step-body input[name=notes]").val(data.notes);
+                    $(".step-body input[name=duration]").val(data.duration);
+                    $(".step-body input[name=score]").val(data.score);
+                    if(!CoreUtil.isEmpty(data.self)){
+                        if(data.self == 1){
+                            $("#self").prop("checked", true).val(data.self);
+                        }else{
+                            $("#self").prop("checked", false).val(data.self);
+                        }
+                    }
+                    if(!CoreUtil.isEmpty(data.gradeType)){
+                        classType = data.gradeType;
+                        $("#gradeType").find('option[value="'+data.gradeType+'"]').prop('selected',true);
+                    }
+
+                    if(!CoreUtil.isEmpty(data.subjectId)){
+                        loadSubjectSelect($("#subjectId"));
+                        // $("#subjectId").val(data.subjectId);
+                        $("#subjectId").find('option[value="'+data.subjectId+'"]').prop('selected',true);
+                    }
+                    form.render();
+                    break;
+            }
+        });
+
+
+
+
+
+
+
+        //导出
+        $('#export').on('click', function () {
+            //原先分页limit
+            var exportParams = {
+                limit: 10000,
+                key: $("#key").val()
+            };
+            CoreUtil.sendPost("/dlTest/listByPage", exportParams, function (res) {
+                //初始化渲染数据
+                if (res.data != null && res.data.records != null) {
+                    table.exportFile(tableIns1.config.id, res.data.records, 'xls');
+                }
+            });
+        });
+
+        //删除
+        var tipDialog=function (ids) {
+            layer.open({
+                content: "确定要删除么?",
+                yes: function(index, layero){
+                    layer.close(index); //如果设定了yes回调，需进行手工关闭
+                    CoreUtil.sendDelete("/dlTest/delete",ids,function (res) {
+                        layer.msg(res.msg, {time:1000},function () {
+                            search();
+                        });
+                    });
+                }
+            });
+        };
+
+        //返回
+        $("#btn_cancel").click(function() {
+            $(".table_div").show();
+            $(".step-body").hide();
+            closeTestCatalog();
+            return false;
+        });
+
+        //监听保存
+        form.on('switch(onOff)', function(data){
+            $("#self").attr('type', 'hidden').val(this.checked ? 1 : 2);
+        });
+        form.on('select(select-question-type)', function () {
+            $("#a_name").val($("#a_questionType").find('option:selected').text());
+        });
+
+        form.on('select(select-grade)', function (data) {
+            classType = $("#gradeType").val();
+            loadSubjectSelect($("#subjectId"));
+        });
+
+
+
+        form.on('submit(submit)', function(data){
+            if(data.field.id===undefined || data.field.id===null || data.field.id===""){
+                CoreUtil.sendPost("/dlTest/add",data.field,function (res) {
+                    search();
+                });
+            }else {
+                CoreUtil.sendPut("/dlTest/update",data.field,function (res) {
+                    search();
+                });
+            }
+            $("#title").text(data.field.testName);
+            nextStep();
+            openTestCatalog(null);
+            return false;
+        });
+    });
+    
+    
+    function addBigTest() {
+        
+    }
+
+    function addMinTest() {
+
+    }
+
+
+    function preStep(){
+        $step.preStep();
+        closeTestCatalog();
+    }
+
+    function nextStep(){
+        $step.nextStep();
+    }
+
+    function openAddOrEditItem(type, index){
+        var title = "";
+        if(type == "add"){
+            clearItemData();
+            title = "新增";
+        }else{
+            setItemData(index);
+            title = "编辑";
+        }
+        layer.open({
+            type: 1,
+            content: $('#add_item'),
+            title: title + "大题",
+            offset: 'b',
+            shade: 0,
+            anim: 2,
+            min: true,
+            area: ['700px', '400px'],
+            btn: ['确认','取消'],
+            yes: function (index, layero) {
+                layer.msg("确定");
+                layer.close(index);
+            },
+            btn2: function(){
+                layer.msg("取消");
+            }
+        });
+    }
+    /**
+     * 清空大题数据
+     */
+    function clearItemData() {
+
+    }
+
+    /**
+     * 设置大题数据
+     */
+    function setItemData(index){
+
+    }
+    
+    /**
+     * 打开试卷大题目录菜单
+     *
+     */
+    function openTestCatalog(testId) {
+
+        windowIndex = layer.open({
+            type: 1,
+            content: $("#catalog"),
+            title: "大题目录",
+            closeBtn :0,
+            zIndex: 100,
+            area: ['180px', '400px'],
+            shade: 0,
+            offset: 'r',
+            btnAlign: 'c',
+            btn: ['新增大题'],
+            yes: function (index, layero) {
+                openAddOrEditItem('add');
+            }
+        });
+
+        // CoreUtil.sendPost("", {}, function (res) {
+        //    //加载目录列表
+        //
+        //
+        // });
+    }
+    /**
+     * 关闭试卷大题目录菜单
+     *
+     */
+    function closeTestCatalog() {
+        if(windowIndex != null){
+            layer.close(windowIndex);
+            //并且清空里面的内容
+            $("#catalog").empty();
+        }
+    }
+
+
+    function openAddOrEditDetail(type, index) {
+        var title = "";
+        if(type == "add"){
+            clearDetailData();
+            title = "新增";
+        }else{
+            setDetailData(index);
+            title = "编辑";
+        }
+        layer.open({
+            type: 1,
+            content: $('#add_detail'),
+            title: title + "试题",
+            offset: 'b',
+            shade: 0,
+            anim: 2,
+            min: true,
+            area: ['700px', '400px'],
+            btn: ['确认','取消'],
+            yes: function (index, layero) {
+                layer.msg("确定");
+                layer.close(index);
+            },
+            btn2: function(){
+                layer.msg("取消");
+            }
+        });
+    }
+
+    /**
+     * 清空小题数据
+     */
+    function clearDetailData() {
+
+    }
+
+    /**
+     * 设置小题数据
+     */
+    function setDetailData(index){
+
+    }
+
+    function loadGradeTypeSelect(node) {
+        var classTypeDatas = JSON.parse(classTypeData);
+        var gradeDatas = JSON.parse(gradeData);
+        //var node = $("#gradeType");
+        for(var j = 0; j < classTypeDatas.length; j ++){
+            var optgroup = "<optgroup label=" + classTypeDatas[j].label + ">";
+            for(var i = 0; i < gradeDatas.length; i++){
+                if(Math.floor(gradeDatas[i].value / 1000) == classTypeDatas[j].value){
+                    optgroup += "<option value=" + gradeDatas[i].value + ">" + gradeDatas[i].label+ "</option>";
+                }
+            }
+            optgroup += "</optgroup>";
+            node.append(optgroup);
+        }
+        form.render("select");
+    }
+    function loadSubjectSelect(node) {
+
+        if(classType == null){
+            layer.msg("发生错误了");
+            return;
+        }
+        var params = {
+            grade: classType
+        }
+        CoreUtil.sendPost("/dlCourse/getListByClassType", params, function (res) {
+            node.empty();
+            node.append("<option value=\"\">请选择</option>");
+            var data = res.data;
+            for(var i = 0; i < data.length; i ++ ){
+                node.append('<option value="'+ data[i].id +'">' + data[i].name +'</option>');
+            }
+            form.render("select");
+        }, false);
+    }
+
+
+    //执行查询
+    function search() {
+        //这里以搜索为例
+        tableIns1.reload({
+            where: { //设定异步数据接口的额外参数，任意设
+                key: $("#key").val()
+            }
+            , page: {
+                curr: 1 //重新从第 1 页开始
+            }
+        });
+    };
+</script>

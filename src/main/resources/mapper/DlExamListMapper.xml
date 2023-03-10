@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.company.project.mapper.DlExamListMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.company.project.entity.DlExamListEntity" id="dlExamListMap">
+        <result property="id" column="id"/>
+        <result property="examRoomId" column="exam_room_id"/>
+        <result property="examPlanId" column="exam_plan_id"/>
+        <result property="courseId" column="course_id"/>
+        <result property="teacherId" column="teacher_id"/>
+        <result property="examTime" column="exam_time"/>
+        <result property="startTime" column="start_time"/>
+        <result property="endTime" column="end_time"/>
+        <result property="status" column="status"/>
+        <collection property="teachers" ofType="com.company.project.entity.DlExamListTeacher">
+            <result property="id" column="t_id"/>
+            <result property="teacherId" column="t_teacher_id"/>
+            <result property="examListId" column="exam_list_id"/>
+            <result property="teacherName" column="teacher_name"/>
+            <result property="main" column="main"/>
+        </collection>
+    </resultMap>
+
+
+    <resultMap type="com.company.project.vo.resp.DlExamListVo" id="myListMap">
+        <result property="id" column="id"/>
+        <result property="examName" column="name"/>
+        <result property="examRoom" column="room_name"/>
+        <result property="classRoom" column="class_room_name"/>
+        <result property="courseId" column="course_id"/>
+        <result property="teacherName" column="teacher_name"/>
+        <result property="examTime" column="exam_time"/>
+        <result property="startTime" column="start_time"/>
+        <result property="endTime" column="end_time"/>
+        <result property="status" column="status"/>
+    </resultMap>
+    <select id="getMyExamPlanList" parameterType="com.company.project.entity.DlExamListEntity" resultMap="myListMap">
+        select l.id, r.room_name, r.class_room_name, l.course_id, t.teacher_name, l.exam_time, l.start_time, l.end_time, l.status, p.name
+        from dl_exam_list l, dl_exam_list_teacher t, dl_exam_room r, dl_exam_plan p
+        where t.teacher_id =#{teacherId} and l.id= t.exam_list_id and r.id=l.exam_room_id and p.id=l.exam_plan_id and p.status &lt; 3
+        <if test="status != null and status != ''">
+            and l.status=#{status}
+        </if>
+    </select>
+
+    <select id="getListByExamId" resultMap="dlExamListMap" parameterType="String">
+        select l.id, l.exam_room_id,l.exam_plan_id,l.course_id,l.teacher_id,l.exam_time,l.status,l.start_time,l.end_time,t.id as t_id,l.teacher_id as t_teacher_id, t.exam_list_id, t.teacher_name, t.main
+         from dl_exam_list l, dl_exam_list_teacher t where l.id=t.exam_list_id and l.exam_plan_id=#{examPlanId} order by l.exam_time
+    </select>
+
+
+    <delete id="removeTeachersByExamId" parameterType="String">
+        delete from dl_exam_list_teacher where exam_list_id in (select id from dl_exam_list where exam_plan_id=#{examListId})
+    </delete>
+
+    <insert id="saveTeacher" parameterType="com.company.project.entity.DlExamListTeacher">
+        insert into dl_exam_list_teacher(id, teacher_id, exam_list_id, teacher_name, main) values(#{id},#{teacherId},#{examListId},#{teacherName},#{main})
+    </insert>
+
+    <delete id="removeListByExamId" parameterType="String">
+        delete from dl_exam_list where exam_plan_id=#{examPlanId}
+    </delete>
+
+
+    <delete id="removeTeacherByTeacherId" parameterType="String">
+        delete form dl_exam_list_teacher where id=#{listTeacherId}
+    </delete>
+
+    <select id="getListTeachersByListId" parameterType="String" resultType="com.company.project.entity.DlExamListTeacher">
+        select id, teacher_id as teacherId, exam_list_id as examListId, teacher_name as teacherName from dl_exam_list_teacher where exam_list_id=#{listId}
+    </select>
+
+
+
+
+</mapper>

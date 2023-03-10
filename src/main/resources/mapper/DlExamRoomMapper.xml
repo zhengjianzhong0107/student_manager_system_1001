@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.company.project.mapper.DlExamRoomMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.company.project.entity.DlExamRoomEntity" id="dlExamRoomMap">
+        <result property="id" column="id"/>
+        <result property="examId" column="exam_id"/>
+        <result property="roomId" column="room_id"/>
+        <result property="roomName" column="room_name"/>
+        <result property="capacity" column="capacity"/>
+        <result property="chiefExaminer" column="chief_examiner"/>
+        <result property="deputyExaminer" column="deputy_examiner"/>
+        <result property="deputyExaminer2" column="deputy_examiner2"/>
+    </resultMap>
+
+    <select id="getRoomsCapacity" resultType="int" parameterType="String">
+        select sum(capacity) from dl_exam_room where exam_id = #{examId}
+    </select>
+
+    <select id="getExamRoomBeanByStuId" resultMap="dlExamRoomMap" parameterType="java.util.Map">
+        select r.* from dl_exam_room r, dl_exam_student s where s.student_id=#{stuId} and s.exam_room_id=r.id and s.exam_plan_id=#{planId}
+    </select>
+
+</mapper>

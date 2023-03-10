@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="/layui/css/layui.css">
+    <link rel="stylesheet" href="/css/custom.form.css">
+    <style>
+        .table-class table td{
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <div class='layui-form'>
+        <div class="layui-form-item">
+            <label class="layui-form-label">学期</label>
+            <div class="layui-input-inline">
+                <select id="t_termId" name="t_termId" th:with="list=${@dlTermService.getJSONList()}" lay-search="" lay-verify="required">
+                    <option value="">请选择学期</option>
+                    <option th:each="bean : ${list}" th:text="${bean.title}" th:value="${bean.id}"></option>
+                </select>
+            </div>
+            <label class="layui-form-label">教师</label>
+            <div class="layui-input-inline">
+                <select id="teacherId" name="teacherId"  th:with="list=${@userServiceImpl.getTeachers()}" lay-filter="select-teacher" lay-search="" lay-verify="required">
+                    <option value="">请选择教师</option>
+                    <option th:each="bean : ${list}" th:text="${bean.realName}" th:value="${bean.id}"></option>
+                </select>
+            </div>
+
+        </div>
+
+        <div class="layui-form-item table-class">
+            <table id="teacherCourseTable" class="layui-table"></table>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>
+<script src="/layui/layui.all.js"></script>
+<script src="/js/core.util.js"></script>
+<script>
+    //获取token
+    var token = CoreUtil.getData("access_token");
+    //地址栏转义token中的#号
+    var tokenQuery = token.replace("#", "%23");
+    var tableIns1;
+    var table = layui.table;
+    var form = layui.form;
+    var layer = layui.layer;
+    var $ = jQuery = layui.jquery;
+    var laydate = layui.laydate;
+
+    layui.use(['table', 'layer', 'laydate'], function () {
+        loadTeacherCourseTable();
+
+
+
+
+
+
+        form.on('select(select-teacher)', function(){
+            loadTeacherCourseTable();
+            //刷新教师课表内容
+            var teacherId = $("#teacherId").val();
+            var termId = $("#t_termId").val();
+            var node = $("#teacherCourseTable");
+            CoreUtil.sendPost("/dlCourseTable/tableData", {termId: termId, teacherId: teacherId}, function (res) {
+                var data = res.data;
+                var content = "";
+                for (var i = 0; i < data.length; i ++){
+                    content = "<p>" + data[i].className + "</p><p>" + data[i].courseName + "</p>";
+                    $("#" + data[i].row + data[i].col).html(content);
+                }
+            });
+        });
+    });
+
+
+
+
+
+
+    function loadTeacherCourseTable(){
+        var teacherCourseTable = $("#teacherCourseTable");
+        teacherCourseTable.empty();
+        CoreUtil.loadCourseTable(7, 4, 3, 2, teacherCourseTable);
+    }
+
+
+</script>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="/layui/css/layui.css">
+    <link rel="stylesheet" href="/css/custom.form.css">
+    <style>
+        .table-class table td{
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div>
+
+
+    <!--班级课表-->
+
+    <div class='layui-form'>
+        <div class="layui-form-item">
+            <label class="layui-form-label">学期</label>
+            <div class="layui-input-inline">
+                <select id="c_termId" name="c_termId" lay-filter="select-term" th:with="list=${@dlTermService.getJSONList()}" lay-search="" lay-verify="required">
+                    <option value="">请选择学期</option>
+                    <option th:each="bean : ${list}" th:text="${bean.title}" th:value="${bean.id}"></option>
+                </select>
+            </div>
+            <label class="layui-form-label">班级</label>
+            <div class="layui-input-inline">
+                <select id="classType" name="classType" lay-filter="select-type" th:with="dics=${@sysDictService.getType('class_type')}" lay-search="">
+                    <option value="">请选择教育阶段</option>
+                    <option th:each="dic : ${dics}" th:text="${dic.label}" th:value="${dic.value}"></option>
+                </select>
+            </div>
+            <div class="layui-input-inline">
+                <select id="gradeId" name="gradeId" lay-filter="select-grade" lay-search="">
+                    <option value="">请选择年级</option>
+                </select>
+            </div>
+            <div class="layui-input-inline">
+                <select id="classId" name="classId" lay-filter="select-class" lay-verify="required">
+                    <option value="">请选择班级</option>
+                </select>
+            </div>
+
+        </div>
+
+        <div class="layui-form-item table-class">
+            <table id="classCourseTable" class="layui-table"></table>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
+<script src="/layui/layui.all.js"></script>
+<script src="/js/core.util.js"></script>
+<script>
+    //获取token
+    var token = CoreUtil.getData("access_token");
+    //地址栏转义token中的#号
+    var tokenQuery = token.replace("#", "%23");
+    var tableIns1;
+    var table = layui.table;
+    var form = layui.form;
+    var layer = layui.layer;
+    var $ = jQuery = layui.jquery;
+    var laydate = layui.laydate;
+
+    layui.use(['table', 'layer', 'laydate'], function () {
+        loadClassCourseTable();
+
+
+        form.on('select(select-type)', function(){
+            loadGradeSelect();
+        });
+
+        form.on('select(select-grade)', function(){
+            loadClassSelect();
+        });
+
+        form.on('select(select-class)', function(){
+            loadClassCourseTable();
+            //刷新班级课表内容
+            var classId = $("#classId").val();
+            var termId = $("#c_termId").val();
+            var node = $("#classCourseTable");
+            CoreUtil.sendPost("/dlCourseTable/tableData", {termId: termId, classId: classId}, function (res) {
+                var data = res.data;
+                var content = "";
+                for (var i = 0; i < data.length; i ++){
+                    content = "<p>" + data[i].courseName + "</p><p>" + data[i].teacherName + "</p>";
+                    $("#" + data[i].row + data[i].col).html(content);
+                }
+            });
+        });
+
+
+    });
+
+
+
+    function loadClassSelect(){
+        var gradeId = $("#gradeId").val();
+        var classNode = $("#classId");
+        classNode.empty();
+        classNode.append("<option value=\"\">请选择班级</option>");
+        if(CoreUtil.isEmpty(gradeId)){
+            return;
+        }
+        CoreUtil.sendPost("/dlClass/getListByGradeId", {gradeId: gradeId}, function (res) {
+            var data = res.data;
+            for(var i = 0; i < data.length; i ++ ){
+                classNode.append('<option value="'+ data[i].id +'">' + data[i].classNo +'班</option>');
+            }
+            form.render("select");
+        }, false);
+
+    }
+
+    function loadGradeSelect(){
+        var classType = $("#classType").val();
+        var node = $("#gradeId");
+        var classNode = $("#classId");
+        node.empty();
+        classNode.empty();
+
+        node.append("<option value=\"\">请选择年级</option>");
+        if(CoreUtil.isEmpty(classType)){
+            return;
+        }
+        CoreUtil.sendPost("/dlGrade/getGradeListByClassType", {type: classType}, function (res) {
+            var data = res.data;
+            for(var i = 0; i < data.length; i ++ ){
+                node.append('<option value="'+ data[i].id +'">' + data[i].gradeName +'级</option>');
+            }
+            form.render("select");
+        }, false);
+    }
+
+
+    function loadClassCourseTable(){
+        var classCourseTable = $("#classCourseTable");
+        classCourseTable.empty();
+        CoreUtil.loadCourseTable(7, 4, 3, 2, classCourseTable);
+    }
+
+
+
+</script>

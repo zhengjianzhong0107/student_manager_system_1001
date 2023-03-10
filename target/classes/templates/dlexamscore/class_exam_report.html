@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="/layui/css/layui.css">
+    <link rel="stylesheet" href="/css/custom.form.css">
+    <style>
+        th {
+            text-align: center
+        }
+        .table_margin{
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+
+        body .demo-class .layui-layer-title{
+            background:#5FB878; color:#fff; border: none;
+        }
+    </style>
+</head>
+<body>
+
+<!--成绩列表-->
+<fieldset class="layui-elem-field">
+    <legend style="text-align: center;"><b style="font-size: larger">成绩分析列表</b></legend>
+    <div class="layui-field-box">
+        <div th:switch="${data.classType}">
+            <div th:case="1" class="table_margin">
+                <table class="layui-table">
+                    <thead>
+                    <tr>
+                        <th rowspan="2" width="25%">考试名称</th>
+                        <th rowspan="2" width="10%">学生姓名</th>
+                        <th colspan="4" width="55%" style="text-align: center">成绩</th>
+                        <th rowspan="2" width="10%">操作</th>
+                    </tr>
+                    <tr>
+                        <th>语文</th>
+                        <th>数学</th>
+                        <th>英语</th>
+                        <th>总分</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="bean: ${data.list}">
+                        <td th:text="${bean.examTitle}"></td>
+                        <td th:text="${bean.studentName}"></td>
+                        <td th:text="${bean.yw}"></td>
+                        <td th:text="${bean.sx}"></td>
+                        <td th:text="${bean.yy}"></td>
+                        <td th:text="${bean.totalScore}"></td>
+                        <td><a class="layui-btn layui-btn-xs" th:onclick="openThisExamReport([[${bean.examId}]], [[${bean.studentId}]])">查看分析报告</a></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div th:case="*" class="table_margin">
+                <table class="layui-table">
+                    <thead>
+                    <tr>
+                        <th rowspan="2" width="25%">考试名称</th>
+                        <th rowspan="2" width="10%">学生姓名</th>
+                        <th colspan="10" width="55%" style="text-align: center">成绩</th>
+                        <th rowspan="2" width="10%">操作</th>
+                    </tr>
+                    <tr>
+                        <th>语文</th>
+                        <th>数学</th>
+                        <th>英语</th>
+                        <th>物理</th>
+                        <th>化学</th>
+                        <th>生物</th>
+                        <th>历史</th>
+                        <th>地理</th>
+                        <th>政治</th>
+                        <th>总分</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="bean: ${data.list}">
+                        <td th:text="${bean.examTitle}"></td>
+                        <td th:text="${bean.studentName}"></td>
+                        <td th:text="${bean.yw}"></td>
+                        <td th:text="${bean.sx}"></td>
+                        <td th:text="${bean.yy}"></td>
+                        <td th:text="${bean.wl}"></td>
+                        <td th:text="${bean.hx}"></td>
+                        <td th:text="${bean.sw}"></td>
+                        <td th:text="${bean.ls}"></td>
+                        <td th:text="${bean.dl}"></td>
+                        <td th:text="${bean.zz}"></td>
+                        <td th:text="${bean.totalScore}"></td>
+                        <td><a class="layui-btn layui-btn-xs" th:onclick="openThisExamReport([[${bean.examId}]], [[${bean.studentId}]])">查看分析报告</a></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</fieldset>
+
+
+<fieldset class="layui-elem-field layui-field-title">
+    <legend style="text-align: center"><b>班级成绩分布图</b></legend>
+    <div class="layui-field-box">
+        <div class="layui-col-sm12 layui-col-md12 layui-col-lg12">
+            <div id="scoreBar" style="width: auto;height: 650px;"> </div>
+        </div>
+
+    </div>
+</fieldset>
+
+
+</body>
+</html>
+<script src="/layui/layui.all.js"></script>
+<script src="/js/core.util.js"></script>
+<script src="/js/echarts.min.js"></script>
+<script type="text/javascript" >
+
+    //获取token
+    var token = CoreUtil.getData("access_token");
+    //地址栏转义token中的#号
+    var tokenQuery = token.replace("#", "%23");
+    var tableIns1;
+    var table = layui.table;
+    var form = layui.form;
+    var layer = layui.layer;
+    var $ = jQuery = layui.jquery;
+    var laydate = layui.laydate;
+
+    var lineObject = "[[${data.lineObject}]]".replace(/&quot;/g,"\"");
+    lineObject = JSON.parse(lineObject);
+    layui.use(['table', 'layer', 'laydate'], function () {
+        var scoreBar = echarts.init(document.getElementById('scoreBar'));
+        var lineOptions = {
+            title: {
+                text: "班级课程成绩分布图",
+                x: 'center'
+            },
+            legend: {
+                right: 'right',
+                orient: 'vertical', //类型垂直,默认水平
+                data: lineObject.legend
+            },
+            xAxis: {
+                data: ['0-30','30-60','60-70','70-80','80-90','90-100'],
+                name: "年级"
+            },
+            yAxis: {
+                type: "value",
+                name: "人数"
+            },
+            series: lineObject.series,
+            tooltip : {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'cross',
+                    label: {
+                        backgroundColor: '#6a7985'
+                    }
+                }
+            }
+        };
+        scoreBar.setOption(lineOptions, true);
+
+    });
+
+    function openThisExamReport(examId, studentId) {
+        layer.open({
+            type: 2,
+            content: "/dlExamScore/examAnalysisReport?examId=" + examId + "&studentId="+ studentId + "&authorization=" + tokenQuery,
+            area: ['1000px', '500px'],
+            btn: ["确认"],
+            title: "考试成绩分析报告",
+            shadeClose: true,
+            skin: 'demo-class',
+            maxmin: true,
+            yes: function (index, layero) {
+                layer.close(index);
+            }
+        });
+
+    }
+
+
+</script>

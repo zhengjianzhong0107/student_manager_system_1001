@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="/layui/css/layui.css">
+    <link rel="stylesheet" href="/css/custom.form.css">
+    <style>
+        th {
+            text-align: center
+        }
+        .table_margin{
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+
+        body .demo-class .layui-layer-title{
+            background:#5FB878; color:#fff; border: none;
+        }
+    </style>
+</head>
+<body>
+<div class="layui-card" >
+    <div class="layui-card-header" style="text-align: center;font-size: larger; background-color: #dddddd;"><b>成绩报告</b></div>
+    <div class="ok-card-body" style="background-color: white; background-color: #f2f2f2;">
+        <p th:utext="'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + ${data.desc}" style="font-size: larger;line-height:40px;padding-left: 20px;padding-right: 20px;"></p>
+    </div>
+</div>
+
+
+<!--成绩列表-->
+<fieldset class="layui-elem-field">
+    <legend>成绩分析列表</legend>
+    <div class="layui-field-box">
+        <div class="table_margin">
+            <table class="layui-table">
+                <thead>
+                <tr>
+                    <th width="10%">学生姓名</th>
+                    <th width="10%">科目</th>
+                    <th width="10%">成绩</th>
+                    <th width="10%">班级平均分</th>
+                    <th width="10%">班级排名</th>
+                    <th width="10%">年级平均分</th>
+                    <th width="10%">年级排名</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="bean: ${data.thisData.list}">
+                    <td th:text="${bean.studentName}"></td>
+                    <td th:text="${bean.courseName}"></td>
+                    <td th:text="${bean.score}"></td>
+                    <td th:text="${bean.classScoreAvg}"></td>
+                    <td th:text="${bean.classOrderNum}"></td>
+                    <td th:text="${bean.gradeScoreAvg}"></td>
+                    <td th:text="${bean.gradeOrderNum}"></td>
+                </tr>
+                </tbody>
+            </table>
+            <div>
+                <table class="layui-table" lay-skin="line">
+                    <tr>
+                        <td th:text="'总分:' + ${data.thisData.totalScore}" width="33%"></td>
+                        <td th:text="'班级排名:' + ${data.thisData.sumScoreClassOrderNum}" width="33%"></td>
+                        <td th:text="'年级排名:' + ${data.thisData.sumScoreGradeOrderNum}" width="33%"></td>
+                    </tr>
+                </table>
+
+            </div>
+
+
+        </div>
+    </div>
+</fieldset>
+
+
+<fieldset class="layui-elem-field layui-field-title">
+    <legend>成绩分析图</legend>
+    <div class="layui-field-box">
+        <div class="layui-col-sm6 layui-col-md6 layui-col-lg6">
+            <div id="scoreBar" style="width: 450px;height: 450px;"> </div>
+        </div>
+        <div class="layui-col-sm6 layui-col-md6 layui-col-lg6">
+            <div id="scoreCircular" style="width: 450px;height: 450px;"> </div>
+        </div>
+    </div>
+</fieldset>
+
+
+</body>
+</html>
+<script src="/layui/layui.all.js"></script>
+<script src="/js/core.util.js"></script>
+<script src="/js/echarts.min.js"></script>
+<script type="text/javascript" >
+
+    //获取token
+    var token = CoreUtil.getData("access_token");
+    //地址栏转义token中的#号
+    var tokenQuery = token.replace("#", "%23");
+    var tableIns1;
+    var table = layui.table;
+    var form = layui.form;
+    var layer = layui.layer;
+    var $ = jQuery = layui.jquery;
+    var laydate = layui.laydate;
+
+    var barObject = "[[${data.barObject}]]".replace(/&quot;/g,"\"");
+    var pieObject = "[[${data.pieObject}]]".replace(/&quot;/g,"\"");
+    barObject = JSON.parse(barObject);
+    pieObject = JSON.parse(pieObject);
+    layui.use(['table', 'layer', 'laydate'], function () {
+        var scoreCircular = echarts.init(document.getElementById('scoreCircular'));
+        var scoreBar = echarts.init(document.getElementById('scoreBar'));
+        var barOptions = {
+            title: {
+                text: "成绩对比",
+                x: 'center'
+            },
+            legend: {
+                right: 'right',
+                orient: 'vertical', //类型垂直,默认水平
+                data: barObject.legend
+            },
+            xAxis: {
+                data: barObject.xAxis
+            },
+            yAxis: {
+                type: "value"
+            },
+            series: barObject.series,
+            tooltip : {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'cross',
+                    label: {
+                        backgroundColor: '#6a7985'
+                    }
+                }
+            }
+        };
+        scoreBar.setOption(barOptions, true);
+
+        var pieOptions = {
+            title: {
+                text: "总分构成",
+                x: 'center'
+            },
+            legend: {
+                orient: 'vertical', //类型垂直,默认水平
+                left: 'left',
+                data: pieObject.legend
+            },
+            series: {
+                type: 'pie', //饼状
+                radius: '60%', //圆的大小
+                center: ['50%', '50%'], //居中
+                data: pieObject.series
+            },
+            tooltip : {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'cross',
+                    label: {
+                        backgroundColor: '#6a7985'
+                    }
+                }
+            }
+        };
+        scoreCircular.setOption(pieOptions, true);
+
+    });
+
+
+</script>

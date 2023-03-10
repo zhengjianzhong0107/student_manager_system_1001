@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.company.project.mapper.DlExamScoreMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.company.project.entity.DlExamScoreEntity" id="dlExamScoreMap">
+        <result property="id" column="id"/>
+        <result property="studentId" column="student_id"/>
+        <result property="studentName" column="student_name"/>
+        <result property="score" column="score"/>
+        <result property="totalScore" column="total_score"/>
+        <result property="resultId" column="result_id"/>
+        <result property="remark" column="remark"/>
+        <result property="examId" column="exam_id"/>
+        <result property="courseId" column="course_id"/>
+    </resultMap>
+
+    <resultMap id="stuScoreMap" type="com.company.project.vo.resp.DlStudentScoreVo">
+        <result property="examId" column="id"/>
+        <result property="examTitle" column="name"/>
+        <result property="studentId" column="student_id"/>
+        <result property="studentName" column="student_name"/>
+        <result property="yw" column="yw"/>
+        <result property="sx" column="sx"/>
+        <result property="yy" column="yy"/>
+        <result property="wl" column="wl"/>
+        <result property="hx" column="hx"/>
+        <result property="sw" column="sw"/>
+        <result property="ls" column="ls"/>
+        <result property="dl" column="dl"/>
+        <result property="zz" column="zz"/>
+        <result property="totalScore" column="total_score"/>
+    </resultMap>
+
+
+    <resultMap id="scoreMap" type="com.company.project.vo.resp.DlScoreVo">
+        <result property="classId" column="class_id"/>
+        <result property="studentId" column="student_id"/>
+        <result property="studentName" column="student_name"/>
+
+        <result property="courseName" column="course_name"/>
+
+        <result property="courseId" column="course_id"/>
+        <result property="score" column="score"/>
+        <result property="totalScore" column="total_score"/>
+
+
+    </resultMap>
+
+
+    <select id="getStuScoreListByStuId" parameterType="String" resultMap="stuScoreMap">
+        select p.name, p.id, s.student_id, s.student_name,
+        sum(case r.course_name when '语文' then s.score else 0 end) as yw,
+        sum(case r.course_name when '数学' then s.score else 0 end) as sx,
+        sum(case r.course_name when '英语' then s.score else 0 end) as yy,
+        sum(case r.course_name when '物理' then s.score else 0 end) as wl,
+        sum(case r.course_name when '化学' then s.score else 0 end) as hx,
+        sum(case r.course_name when '生物' then s.score else 0 end) as sw,
+        sum(case r.course_name when '历史' then s.score else 0 end) as ls,
+        sum(case r.course_name when '地理' then s.score else 0 end) as dl,
+        sum(case r.course_name when '政治' then s.score else 0 end) as zz,
+        sum(s.score) as total_score
+        from dl_exam_score s JOIN dl_exam_result r ON s.result_id=r.id
+        JOIN dl_exam_plan p ON s.exam_id=p.id
+        where s.student_id=#{studentId} order by p.time_start desc limit 10;
+    </select>
+    
+    <!--
+        获取某次考试的成绩 ,  通过传入的参数不通，来查询的数据不一样，可以查询个人成绩（传学生ID），也可以查询班级成绩（只传examId和classId）
+        如果及没有传学生ID，也没有传classID，那么就表示查询的是整个年级的数据
+    -->
+    <select id="getStuScoreByConditions" parameterType="com.company.project.entity.DlExamScoreEntity" resultMap="stuScoreMap">
+        select p.id, p.name, s.student_id, s.student_name,
+        sum(case r.course_name when '语文' then s.score else 0 end) as yw,
+        sum(case r.course_name when '数学' then s.score else 0 end) as sx,
+        sum(case r.course_name when '英语' then s.score else 0 end) as yy,
+        sum(case r.course_name when '物理' then s.score else 0 end) as wl,
+        sum(case r.course_name when '化学' then s.score else 0 end) as hx,
+        sum(case r.course_name when '生物' then s.score else 0 end) as sw,
+        sum(case r.course_name when '历史' then s.score else 0 end) as ls,
+        sum(case r.course_name when '地理' then s.score else 0 end) as dl,
+        sum(case r.course_name when '政治' then s.score else 0 end) as zz,
+        sum(s.score) as total_score
+        from dl_exam_score s JOIN dl_exam_result r ON s.result_id=r.id
+        JOIN dl_exam_plan p ON s.exam_id=p.id
+        where s.exam_id=#{examId}
+        <if test="studentId != null and studentId != ''">
+            and s.student_id=#{studentId}
+        </if>
+        <if test="classId != null and classId != ''">
+            and r.class_id=#{classId}
+        </if>
+        group by s.student_id, s.student_name, p.name, p.id order by total_score desc
+    </select>
+    <!--获取班级各科的平均成绩-->
+    <select id="getAvgScoreByConditions" parameterType="com.company.project.entity.DlExamScoreEntity" resultMap="dlExamScoreMap">
+        select r.course_id, r.course_name, s.total_score, AVG(s.score) as score from dl_exam_score s JOIN dl_exam_result r ON s.result_id=r.id
+        where r.exam_id=#{examId}
+        <if test="classId != null and classId != ''">
+            and r.class_id=#{classId}
+        </if>
+        GROUP BY r.course_name, r.course_id
+    </select>
+
+    <select id="getSumScoreOrderList" parameterType="com.company.project.entity.DlExamScoreEntity" resultType="java.math.BigDecimal">
+        select sum(s.score) as score  from dl_exam_score s join dl_exam_result r on s.result_id=r.id
+        where r.exam_id=#{examId}
+        <if test="classId != null and classId != ''" >
+            and r.class_id=#{classId}
+        </if>
+        GROUP BY s.student_id ORDER BY score desc
+    </select>
+
+
+
+
+    <select id="getStuExamScore" parameterType="com.company.project.entity.DlExamScoreEntity" resultMap="scoreMap">
+        select r.class_id ,r.course_name, s.course_id, s.score, s.total_score, s.student_id, s.student_name from dl_exam_score s JOIN dl_exam_result r on s.result_id=r.id
+        where r.exam_id=#{examId} and s.student_id=#{studentId}
+    </select>
+
+
+    <select id="getOrderList" parameterType="com.company.project.entity.DlExamScoreEntity" resultMap="dlExamScoreMap">
+        select s.* from dl_exam_score s join dl_exam_result r on s.result_id=r.id
+        where r.exam_id=#{examId} and r.course_id=#{courseId}
+        <if test="classId != null and classId != ''">
+            and r.class_id=#{classId}
+        </if>
+        order by s.score desc
+
+    </select>
+
+    <select id="getUpExamId" parameterType="com.company.project.entity.DlExamPlanEntity" resultType="String">
+        select p.id from dl_exam_plan p JOIN dl_exam_score s ON s.exam_id=p.id WHERE p.time_start &gt; #{timeStart} and s.student_id=#{id} GROUP BY p.id ORDER BY p.time_start desc limit 1;
+    </select>
+
+
+    <select id="getExamGradeClassRangeScoreByExamId" parameterType="String" resultType="com.company.project.vo.resp.ScoreRangeVO">
+        select r.id as resultId, r.class_name as className, r.course_name as courseName,
+        count(case when s.score/s.total_score*100 BETWEEN 90 and 100 then 1 end) as ninety,
+        count(case when s.score/s.total_score*100 BETWEEN 80 and 89 then 1 end) as eighty,
+        count(case when s.score/s.total_score*100 BETWEEN 70 and 79 then 1 end) as seventy,
+        count(case when s.score/s.total_score*100 BETWEEN 60 and 69 then 1 end) as sixty,
+        count(case when s.score/s.total_score*100 BETWEEN 30 and 59 then 1 end) as thirty,
+        count(case when s.score/s.total_score*100 BETWEEN 0 and 29 then 1 end) as zero,
+        avg (s.score) as avg,
+        s.total_score as totalScore
+        from dl_exam_score s JOIN dl_exam_result r ON s.result_id=r.id
+        where r.exam_id=#{examId} GROUP BY r.id;
+
+    </select>
+
+    <select id="getExamGradeRangeScoreByExamId" parameterType="String" resultType="com.company.project.vo.resp.ScoreRangeVO">
+        select r.course_name as courseName,
+        count(case when s.score/s.total_score*100 BETWEEN 90 and 100 then 1 end) as ninety,
+        count(case when s.score/s.total_score*100 BETWEEN 80 and 89 then 1 end) as eighty,
+        count(case when s.score/s.total_score*100 BETWEEN 70 and 79 then 1 end) as seventy,
+        count(case when s.score/s.total_score*100 BETWEEN 60 and 69 then 1 end) as sixty,
+        count(case when s.score/s.total_score*100 BETWEEN 30 and 59 then 1 end) as thirty,
+        count(case when s.score/s.total_score*100 BETWEEN 0 and 29 then 1 end) as zero,
+        avg (s.score) as avg,
+        s.total_score as totalScore
+        from dl_exam_score s JOIN dl_exam_result r ON s.result_id=r.id
+        where r.exam_id=#{examId} GROUP BY r.course_id;
+
+    </select>
+
+    <select id="getExamClassRangeScoreByExamIdAndClassId" parameterType="com.company.project.entity.DlExamScoreEntity" resultType="com.company.project.vo.resp.ScoreRangeVO">
+        select r.course_name as courseName,
+        count(case when s.score/s.total_score*100 BETWEEN 90 and 100 then 1 end) as ninety,
+        count(case when s.score/s.total_score*100 BETWEEN 80 and 89 then 1 end) as eighty,
+        count(case when s.score/s.total_score*100 BETWEEN 70 and 79 then 1 end) as seventy,
+        count(case when s.score/s.total_score*100 BETWEEN 60 and 69 then 1 end) as sixty,
+        count(case when s.score/s.total_score*100 BETWEEN 30 and 59 then 1 end) as thirty,
+        count(case when s.score/s.total_score*100 BETWEEN 0 and 29 then 1 end) as zero,
+        avg (s.score) as avg,
+        s.total_score as totalScore
+        from dl_exam_score s JOIN dl_exam_result r ON s.result_id=r.id
+        where r.exam_id=#{examId} and r.class_id=#{classId} GROUP BY r.course_id;
+    </select>
+
+
+
+
+    
+    
+
+
+</mapper>

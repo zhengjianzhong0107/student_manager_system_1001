@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="/layui/css/layui.css">
+    <link rel="stylesheet" href="/css/custom.form.css">
+    <style>
+        .custom-tree-item-clicked{color:#FC9003}
+
+         body .demo-class .layui-layer-title{
+             background:#5FB878; color:#fff; border: none;
+         }
+    </style>
+</head>
+<body>
+<div class="panel panel-default operation" hidden>
+    <div class="panel-heading title"></div>
+    <div class="layui-card-body">
+        <form class="layui-form " action="" lay-filter="info" style="width: auto;margin-top: 10px">
+            <input name="id" hidden/>
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">学生学号</label>
+                    <div class="layui-input-inline">
+                        <input type="sNo" name="sNo" placeholder="请输入学号" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+
+                <div class="layui-inline">
+                    <label class="layui-form-label">学生姓名</label>
+                    <div class="layui-input-inline">
+                        <input type="sName" name="sName" placeholder="请输入姓名" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">学籍号</label>
+                    <div class="layui-input-inline">
+                        <input type="ssNo" name="ssNo" placeholder="请输入学籍号" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">身份证号</label>
+                    <div class="layui-input-inline">
+                        <input type="idCard" name="idCard" placeholder="请输入身份证号" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">班级选择</label>
+                <div class="layui-input-inline">
+                    <select id="gradeId" name="gradeId" lay-filter="select-grade" lay-search="">
+                        <option value="">请选择</option>
+                    </select>
+                </div>
+                <div class="layui-input-inline">
+                    <select id="classId" name="classId" lay-filter="select-class" lay-search="">
+                        <option value="">请选择</option>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">母亲姓名</label>
+                    <div class="layui-input-inline">
+                        <input type="matherName" name="matherName" placeholder="请输入" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+
+                <div class="layui-inline">
+                    <label class="layui-form-label">母亲电话</label>
+                    <div class="layui-input-inline">
+                        <input type="matherPhone" name="matherPhone" placeholder="请输入" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">父亲姓名</label>
+                    <div class="layui-input-inline">
+                        <input type="fatherPhone" name="fatherPhone" placeholder="请输入" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">父亲电话</label>
+                    <div class="layui-input-inline">
+                        <input type="fatherName" name="fatherName" placeholder="请输入" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">学生年龄</label>
+                    <div class="layui-input-inline">
+                        <input type="age" name="age" placeholder="请输入" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">性别</label>
+                    <div class="layui-input-inline">
+                        <select id="gender" name="gender" lay-filter="select-type" th:with="classType=${@sysDictService.getType('sex')}">
+                            <option value="">请选择</option>
+                            <option th:each="dict : ${classType}" th:text="${dict.label}" th:value="${dict.value}"></option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">入学类型</label>
+                    <div class="layui-input-inline">
+                        <select id="joinType" name="joinType" lay-filter="select-type" th:with="classType=${@sysDictService.getType('join_type')}">
+                            <option value="">请选择</option>
+                            <option th:each="dict : ${classType}" th:text="${dict.label}" th:value="${dict.value}"></option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">入学时间</label>
+                    <div class="layui-inline">
+                        <input type="joinTime" name="joinTime" id="joinTime" placeholder="yyyy-MM-dd" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">学生状态</label>
+                    <div class="layui-input-inline">
+                        <select id="status" name="status" lay-filter="select-type" th:with="classType=${@sysDictService.getType('stu_status')}">
+                            <option value="">请选择</option>
+                            <option th:each="dict : ${classType}" th:text="${dict.label}" th:value="${dict.value}"></option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">备注</label>
+                <div class="layui-input-block">
+                    <input type="remark" name="remark" placeholder="请输入" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <button type="submit" class="layui-btn" lay-submit="" lay-filter="submit">保存</button>
+                    <button  class="layui-btn layui-btn-primary" id="btn_cancel">返回</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 导入学生列表 -->
+<div id="exportStuDiv" hidden>
+
+
+    <div class="layui-upload" style="margin-top: 100px; margin-left: 50px;">
+        <button type="button" class="layui-btn layui-btn-normal" id="test8">选择文件</button>
+        <button type="button" class="layui-btn" id="test9">开始上传</button>
+    </div>
+</div>
+
+
+
+
+<div class="layui-fluid">
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-sm12 layui-col-md2 layui-col-lg2">
+            <div class="layui-card">
+
+                <div class="layui-card-body mini-bar" id="leftTree">
+
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-sm12 layui-col-md10 layui-col-lg10">
+            <div class="table_div">
+                <div id="searchParam"  shiro:hasPermission="dlStudent:list">
+                    <div class="layui-form-item">
+                        <div class="layui-input-inline">
+                            <input type="text" id="key" class="layui-input"  autocomplete="off" placeholder="请输入">
+                        </div>
+
+                        <div class="layui-input-inline ">
+                            <button class="layui-btn" onclick="search()"  id="search">查询</button>
+                            <button class="layui-btn"   id="export">导出全部</button>
+                        </div>
+                    </div>
+
+                </div>
+                <table class="layui-table" id="showTable" lay-filter="showTable" ></table>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/html" id="toolbar">
+    <div class="layui-btn-container">
+        <button class="layui-btn layui-btn-sm" lay-event="add"  shiro:hasPermission="dlStudent:add">添加</button>
+        <button class="layui-btn layui-btn-sm" lay-event="batchDeleted" shiro:hasPermission="dlStudent:delete">删除</button>
+        <button class="layui-btn layui-btn-sm layui-btn-primary" lay-event="downloadTemplate" shiro:hasPermission="sysFiles:list"><i class="layui-icon">&#xe601;</i> 下载模板</button>
+        <button class="layui-btn layui-btn-sm layui-btn-primary" lay-event="exportStuBtn" shiro:hasPermission="dlStudent:export"><i class="layui-icon">&#xe681;</i> 导入学生</button>
+    </div>
+</script>
+<script type="text/html" id="tool">
+    <a class="layui-btn layui-btn-xs" lay-event="edit" shiro:hasPermission="dlStudent:update">编辑</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del" shiro:hasPermission="dlStudent:delete">删除</a>
+</script>
+
+</body>
+</html>
+<script src="/layui/layui.all.js"></script>
+<script src="/js/core.util.js"></script>
+<script>
+    //获取token
+    var token = CoreUtil.getData("access_token");
+    //地址栏转义token中的#号
+    var tokenQuery = token.replace("#", "%23");
+    var tableIns1;
+    var table = layui.table;
+    var form = layui.form;
+    var layer = layui.layer;
+    var tree = layui.tree;
+    var $ = jQuery = layui.jquery;
+    var laydate = layui.laydate;
+    var upload = layui.upload;
+
+    var classDatas = "[[${@dlClassService.getClassList()}]]".replace(/&quot;/g,"\"");
+    var sexDatas = "[[${@sysDictService.getType('sex')}]]".replace(/&quot;/g,"\"");
+    var stuStatusDatas = "[[${@sysDictService.getType('stu_status')}]]".replace(/&quot;/g,"\"");
+
+    var joinTypeDatas = "[[${@sysDictService.getType('join_type')}]]".replace(/&quot;/g,"\"");
+    var classTypeDatas = "[[${@sysDictService.getType('class_type')}]]".replace(/&quot;/g,"\"");
+    var gradeDatas = "[[${@dlGradeService.getGrades()}]]".replace(/&quot;/g,"\"");
+
+    var classId = null;
+    var exportIndex = null;
+
+
+
+    layui.use(['table', 'layer', 'laydate', 'upload'], function () {
+        var groupKeyValue = {};
+        var typeDatas = JSON.parse(classTypeDatas);
+        for(var i=0; i < typeDatas.length; i ++){
+            groupKeyValue[typeDatas[i].value] = typeDatas[i].label;
+        }
+        CoreUtil.getSelectGroupData(gradeDatas, 'type', 'id', 'gradeNameLabel',groupKeyValue, $("#gradeId"));
+
+
+        loadLeftTree();
+        //常规用法
+        laydate.render({
+            elem: '#joinTime',
+            type: 'date',
+            trigger: 'click'
+        });
+
+        //加载table
+        tableIns1 = table.render({
+            elem: '#showTable'
+            , contentType: 'application/json'
+            , headers: {"authorization": token}
+            , page: true //开启分页
+            , url: '/dlStudent/listByPage' //数据接口
+            , method: 'POST'
+            , parseData: function (res) { //将原始数据解析成 table 组件所规定的数据
+                return {
+                    "code": res.code, //解析接口状态
+                    "msg": res.msg, //解析提示文本
+                    "count": CoreUtil.isEmpty(res.data) ? 0 : res.data.total, //解析数据长度
+                    "data": CoreUtil.isEmpty(res.data) ? null : res.data.records //解析数据列表
+                }
+            }
+            , cols: [
+                [
+                    {type: 'checkbox', fixed: 'left'},
+                    {field: 'id', title: 'ID', sort: true, hide: true},
+                    {field: 'sNo', title: '学生学号', sort: true},
+                    {field: 'sName', title: '学生姓名', sort: true},
+                    {field: 'ssNo', title: '学籍号', sort: true},
+                    {field: 'idCard', title: '身份证号', sort: true},
+                    {field: 'classId', title: '班级', sort: true, templet: function (item) {
+                            //获取类型对应的字典label
+                            return CoreUtil.getClassLabel(classDatas, item.classId);
+                        }
+                    },
+                    {field: 'matherName', title: '母亲', sort: true, hide: true},
+                    {field: 'matherPhone', title: '母亲电话', sort: true, hide: true},
+                    {field: 'fatherPhone', title: '父亲', sort: true, hide: true},
+                    {field: 'fatherName', title: '父亲电话', sort: true, hide: true},
+                    {field: 'age', title: '年龄', sort: true, hide: true},
+                    {field: 'gender', title: '性别', sort: true, templet: function (item) {
+                            //获取类型对应的字典label
+                            return CoreUtil.selectDictLabel(sexDatas, item.gender);
+                        }
+                    },
+                    {field: 'phoneNum', title: '联系方式', sort: true, hide: true},
+                    {field: 'joinType', title: '入学类型', sort: true, hide: true, templet: function (item) {
+                            //获取类型对应的字典label
+                            return CoreUtil.selectDictLabel(joinTypeDatas, item.joinType);
+                        }
+                    },
+                    {field: 'joinTime', title: '入学时间', sort: true, templet : "<div>{{layui.util.toDateString(d.joinTime, 'yyyy-MM-dd')}}</div>"},
+                    {field: 'status', title: '状态', sort: true, templet: function (item) {
+                            //获取类型对应的字典label
+                            return CoreUtil.selectDictLabel(stuStatusDatas, item.status);
+                        }
+                    },
+                    {field: 'remark', title: '备注', sort: true, hide: true},
+                    {fixed: 'right', width: 120, toolbar: "#tool", title: '操作'}
+                ]
+            ]
+            , toolbar: '#toolbar'
+        });
+
+
+        form.on('select(select-grade)', function (data) {
+
+            loadClassSelect();
+        });
+
+        //表头工具
+        table.on('toolbar(showTable)', function(obj){
+            switch(obj.event){
+                case 'batchDeleted':
+                    var checkStatus = table.checkStatus(obj.config.id);
+                    var data = checkStatus.data;
+                    if(data.length==0){
+                        layer.msg("请选择要批量删除的列");
+                    }else {
+                        var ids = [];
+                        $(data).each(function (index,item) {
+                            ids.push(item.id);
+                        });
+                        tipDialog(ids);
+                    }
+                    break;
+                case 'add':
+                    $(".table_div").hide();
+                    $("#leftTree").hide();
+                    $(".operation").show();
+                    $(".title").html("新增");
+                    $(".operation input[name=id]").val("");
+                    $(".operation input[name=sNo]").val("");
+                    $(".operation input[name=ssNo]").val("");
+                    $(".operation input[name=idCard]").val("");
+                    $("#classId").val("");
+                    $("#gradeId").val("");
+                    $(".operation input[name=matherName]").val("");
+                    $(".operation input[name=matherPhone]").val("");
+                    $(".operation input[name=age]").val("");
+                    $(".operation input[name=phoneNum]").val("");
+                    $(".operation input[name=grade]").val("");
+                    $("#gender").val("");
+                    $(".operation input[name=fatherPhone]").val("");
+                    $(".operation input[name=fatherName]").val("");
+                    $("#joinType").val("");
+                    $(".operation input[name=joinTime]").val("");
+                    $("#status").val("");
+                    $(".operation input[name=sName]").val("");
+                    $(".operation input[name=remark]").val("");
+                    form.render();
+                    break;
+                case 'exportStuBtn':
+                    //导入学生信息
+                    exportIndex = layer.open({
+                        type: 1,
+                        content: $("#exportStuDiv"),
+                        skin: 'demo-class',
+                        shadeClose : true,
+                        area: ['400px', '300px'],
+                        btn: [],
+
+                    });
+                    break;
+                case 'downloadTemplate':
+
+
+                    $.fileDownload("/sysFiles/download?authorization=" + tokenQuery + "&url=/file/学生导入模板.xlsx", {httpMethod: 'get'});
+
+                    break;
+
+            };
+        });
+        //列操作
+        table.on('tool(showTable)',function (obj) {
+            var data = obj.data;
+            switch (obj.event) {
+                case 'del':
+                    var ids=[];
+                    ids.push(data.id);
+                    tipDialog(ids);
+                    break;
+                case 'edit':
+
+                    $(".table_div").hide();
+                    $("#leftTree").hide();
+                    $(".operation").show();
+                    $(".title").html("编辑");
+                    $(".operation input[name=id]").val(data.id);
+                    $(".operation input[name=sNo]").val(data.sNo);
+                    $(".operation input[name=ssNo]").val(data.ssNo);
+                    $(".operation input[name=idCard]").val(data.idCard);
+                    if (!CoreUtil.isEmpty(data.gradeId)) {
+                        $("#gradeId").find('option[value="'+data.gradeId+'"]').prop('selected',true);
+                        loadClassSelect();
+                    }
+                    if (!CoreUtil.isEmpty(data.classId)) {
+                        $("#classId").find('option[value="'+data.classId+'"]').prop('selected',true);
+
+                    }
+                    $(".operation input[name=matherName]").val(data.matherName);
+                    $(".operation input[name=matherPhone]").val(data.matherPhone);
+                    $(".operation input[name=age]").val(data.age);
+                    if (!CoreUtil.isEmpty(data.gender)) {
+                        $("#gender").find('option[value="'+data.gender+'"]').prop('selected',true);
+                        form.render();
+                    }
+                    $(".operation input[name=phoneNum]").val(data.phoneNum);
+                    $(".operation input[name=grade]").val(data.grade);
+                    $(".operation input[name=fatherPhone]").val(data.fatherPhone);
+                    $(".operation input[name=fatherName]").val(data.fatherName);
+                    if (!CoreUtil.isEmpty(data.joinType)) {
+                        $("#joinType").find('option[value="'+data.joinType+'"]').prop('selected',true);
+                        form.render();
+                    }
+                    $(".operation input[name=joinTime]").val(data.joinTime);
+                    if (!CoreUtil.isEmpty(data.status)) {
+                        $("#status").find('option[value="'+data.status+'"]').prop('selected',true);
+                        form.render();
+                    }
+                    $(".operation input[name=sName]").val(data.sName);
+                    $(".operation input[name=remark]").val(data.remark);
+                    break;
+
+
+            }
+        });
+
+
+        // //拖拽上传
+        // upload.render({
+        //     elem: '#exportStu'
+        //     ,url: '/dlStudent/export' //改成您自己的上传接口
+        //     ,done: function(res){
+        //         layer.msg('上传成功');
+        //         layui.$('#uploadDemoView').removeClass('layui-hide').find('img').attr('src', res.files.file);
+        //         console.log(res)
+        //         layer.close(exportIndex);
+        //     }
+        // });
+
+
+        upload.render({
+            elem: '#test8'
+            ,url: '/dlStudent/export?authorization=' + tokenQuery //改成您自己的上传接口
+            ,auto: false
+            ,type: "post"
+            ,accept: 'file' //普通文件
+            //,multiple: true
+            ,bindAction: '#test9'
+            ,done: function(res){
+                layer.msg('上传成功');
+                console.log(res);
+                layer.close(exportIndex);
+            }
+        });
+
+        //导出
+        $('#export').on('click', function () {
+            //原先分页limit
+            var exportParams = {
+                limit: 10000,
+                key: $("#key").val()
+            };
+            CoreUtil.sendPost("/dlStudent/listByPage", exportParams, function (res) {
+                //初始化渲染数据
+                if (res.data != null && res.data.records != null) {
+                    table.exportFile(tableIns1.config.id, res.data.records, 'xls');
+                }
+            });
+        });
+
+        //删除
+        var tipDialog=function (ids) {
+            layer.open({
+                content: "确定要删除么?",
+                yes: function(index, layero){
+                    layer.close(index); //如果设定了yes回调，需进行手工关闭
+                    CoreUtil.sendDelete("/dlStudent/delete",ids,function (res) {
+                        layer.msg(res.msg, {time:1000},function () {
+                            search();
+                        });
+                    });
+                }
+            });
+        };
+
+        //返回
+        $("#btn_cancel").click(function() {
+            $(".table_div").show();
+            $("#leftTree").show();
+            $(".operation").hide();
+            return false;
+        });
+
+        //监听保存
+        form.on('submit(submit)', function(data){
+            if(data.field.id===undefined || data.field.id===null || data.field.id===""){
+                CoreUtil.sendPost("/dlStudent/add",data.field,function (res) {
+                    $(".table_div").show();
+                    $("#leftTree").show();
+                    $(".operation").hide();
+                    search();
+                });
+            }else {
+                CoreUtil.sendPut("/dlStudent/update",data.field,function (res) {
+                    $(".table_div").show();
+                    $("#leftTree").show();
+                    $(".operation").hide();
+                    search();
+                });
+            }
+
+            return false;
+        });
+    });
+
+
+    function loadClassSelect() {
+        var gradeId = $("#gradeId").val();
+        var childNode = $("#classId");
+        var params ={
+            gradeId: gradeId
+        };
+        childNode.empty();
+        CoreUtil.sendPost("/dlClass/getListByGradeId", params, function (res) {
+            var data = res.data;
+            childNode.append('<option value="">请选择班级</option>')
+            for(var i = 0; i < data.length; i ++ ){
+                childNode.append('<option value="'+ data[i].id +'">' + data[i].classNo +'班</option>');
+            }
+            form.render("select");
+        }, false)
+    }
+
+    function loadLeftTree() {
+        CoreUtil.sendPost("/dlGrade/getClassTree", null, function (res) {
+            var data = res.data;
+            tree.render({
+                elem: '#leftTree'
+                , data: data
+                , onlyIconControl: true  //是否仅允许节点左侧图标控制展开收缩
+                , click: function (obj) {
+                    if(obj.data.id != null && obj.data.id != undefined){
+                        $('div [data-id="'+classId+'"] div').eq(1).last().css('background-color','');     //清除旧的样式
+                        classId = obj.data.id;
+                        //$(obj.elem).addClass('custom-tree-item-clicked');
+                        $('div [data-id="'+obj.data.id+'"] div').eq(1).last().css('background-color','#87eaa3');
+                        search();
+                    }
+                }
+            });
+        });
+    };
+
+    //执行查询
+    function search() {
+        //这里以搜索为例
+        tableIns1.reload({
+            where: { //设定异步数据接口的额外参数，任意设
+                classId: classId
+            }
+            , page: {
+                curr: 1 //重新从第 1 页开始
+            }
+        });
+    };
+</script>
+<script src="/js/jquery.fileDownload.js"></script>

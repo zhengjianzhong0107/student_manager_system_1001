@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.company.project.mapper.DlExamStudentMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.company.project.entity.DlExamStudentEntity" id="dlExamStudentMap">
+        <result property="id" column="id"/>
+        <result property="examPlanId" column="exam_plan_id"/>
+        <result property="examListId" column="exam_list_id"/>
+        <result property="examRoomId" column="exam_room_id"/>
+        <result property="classId" column="class_id"/>
+        <result property="studentId" column="student_id"/>
+        <result property="stuExamNum" column="stu_exam_num"/>
+        <result property="stuSeatNum" column="stu_seat_num"/>
+        <result property="stuName" column="stu_name"/>
+        <result property="stuNum" column="stu_num"/>
+    </resultMap>
+
+
+
+
+</mapper>

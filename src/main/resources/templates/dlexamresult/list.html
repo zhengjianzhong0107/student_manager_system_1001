@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <link rel="stylesheet" href="/layui/css/layui.css">
+  <link rel="stylesheet" href="/css/custom.form.css">
+  <style>
+    body .demo-class .layui-layer-title{
+      background:#5FB878; color:#fff; border: none;
+    }
+  </style>
+</head>
+<body>
+
+
+<div class="layui-tab">
+  <ul class="layui-tab-title">
+    <li class="layui-this">学生成绩查询</li>
+    <li>班级成绩统计</li>
+    <li>年级成绩统计</li>
+  </ul>
+  <div class="layui-tab-content">
+    <!-- 学生成绩查询统计 -->
+    <div class="layui-tab-item layui-show">
+      <div class="table_div layui-form">
+        <div id="searchParam"  shiro:hasPermission="dlExamResult:list">
+          <div class="layui-form-item">
+
+            <div class="layui-input-inline">
+              <select id="gradeId" name="gradeId" lay-filter="select-stu-type"  lay-search="">
+                <option value="">请选择年级</option>
+              </select>
+            </div>
+            <div class="layui-input-inline">
+              <select id="classId" name="classId" lay-filter="select-class"  lay-search="">
+                <option value="">请选择班级</option>
+              </select>
+            </div>
+            <div class="layui-input-inline">
+              <input type="text" id="sName" class="layui-input"  autocomplete="off" placeholder="请输入学生姓名">
+            </div>
+
+            <div class="layui-input-inline">
+              <input type="text" id="ssNo" class="layui-input"  autocomplete="off" placeholder="请输入学生学籍号">
+            </div>
+
+            <div class="layui-input-inline ">
+              <button class="layui-btn" onclick="searchStu()"  id="searchStu">查询</button>
+            </div>
+          </div>
+        </div>
+        <table class="layui-table" id="stuTable" lay-filter="stuTable" ></table>
+      </div>
+    </div>
+    <!-- 班级成绩统计 -->
+    <div class="layui-tab-item layui-form">
+      <div id="searchClassExamParams"  shiro:hasPermission="dlExamResult:list">
+        <div class="layui-form-item">
+
+          <div class="layui-input-inline">
+            <select id="c_gradeId" name="c_gradeId" lay-filter="select-class-type"  lay-search="">
+              <option value="">请选择年级</option>
+            </select>
+          </div>
+          <div class="layui-input-inline">
+            <select id="c_classId" name="c_classId" lay-filter="select-class"  lay-search="">
+              <option value="">请选择班级</option>
+            </select>
+          </div>
+
+          <div class="layui-input-inline">
+            <input type="text" id="examTitle" class="layui-input"  autocomplete="off" placeholder="请输入考试标题">
+          </div>
+
+          <div class="layui-input-inline ">
+            <button class="layui-btn" onclick="searchClassExam()"  id="searchClassExam">查询</button>
+          </div>
+        </div>
+      </div>
+      <table class="layui-table" id="classExamTable" lay-filter="classExamTable" ></table>
+    </div>
+
+
+    <!-- 年级成绩统计 -->
+    <div class="layui-tab-item">
+      <div id="searchExamParams"  shiro:hasPermission="dlExamResult:list">
+        <div class="layui-form-item">
+
+
+          <div class="layui-input-inline">
+            <input type="text" id="examName" class="layui-input"  autocomplete="off" placeholder="请输入考试标题">
+          </div>
+
+          <div class="layui-input-inline ">
+            <button class="layui-btn" onclick="searchExam()"  id="searchExam">查询</button>
+          </div>
+        </div>
+      </div>
+      <table class="layui-table" id="examTable" lay-filter="examTable" ></table>
+
+    </div>
+
+  </div>
+</div>
+
+
+
+
+
+<script type="text/html" id="stuTool">
+  <a class="layui-btn layui-btn-xs" lay-event="stuScoreList" shiro:hasPermission="dlExamScore:list">查看成绩</a>
+</script>
+
+<script type="text/html" id="examTool">
+  <a class="layui-btn layui-btn-xs" lay-event="gradeScoreList" shiro:hasPermission="dlExamScore:list">查看成绩</a>
+</script>
+
+<script type="text/html" id="classExamTool">
+  <a class="layui-btn layui-btn-xs" lay-event="classScoreList" shiro:hasPermission="dlExamScore:list">查看成绩</a>
+</script>
+</body>
+</html>
+<script src="/layui/layui.all.js"></script>
+<script src="/js/core.util.js"></script>
+<script>
+  //获取token
+  var token = CoreUtil.getData("access_token");
+  //地址栏转义token中的#号
+  var tokenQuery = token.replace("#", "%23");
+  var examTableIns;
+  var stuTableIns;
+  var classExamTableIns;
+  var table = layui.table;
+  var form = layui.form;
+  var layer = layui.layer;
+  var $ = jQuery = layui.jquery;
+  var laydate = layui.laydate;
+
+
+  var examTypeDatas = "[[${@sysDictService.getType('exam_type')}]]".replace(/&quot;/g,"\"");
+  var classTypeDatas = "[[${@sysDictService.getType('class_type')}]]".replace(/&quot;/g,"\"");
+  var gradeDatas = "[[${@dlGradeService.getGrades()}]]".replace(/&quot;/g,"\"");
+  var classDatas = "[[${@dlClassService.getClassList()}]]".replace(/&quot;/g,"\"");
+  var sexDatas = "[[${@sysDictService.getType('sex')}]]".replace(/&quot;/g,"\"");
+
+  layui.use(['table', 'layer', 'laydate'], function () {
+    var groupKeyValue = {};
+    var typeDatas = JSON.parse(classTypeDatas);
+    for(var i=0; i < typeDatas.length; i ++){
+      groupKeyValue[typeDatas[i].value] = typeDatas[i].label;
+    }
+    CoreUtil.getSelectGroupData(gradeDatas, 'type', 'id', 'gradeNameLabel',groupKeyValue, $("#gradeId"));
+    CoreUtil.getSelectGroupData(gradeDatas, 'type', 'id', 'gradeNameLabel',groupKeyValue, $("#c_gradeId"));
+    form.render("select");
+    //加载table
+    stuTableIns = table.render({
+      elem: '#stuTable'
+      , contentType: 'application/json'
+      , headers: {"authorization": token}
+      , page: true //开启分页
+      , url: '/dlStudent/listByPage' //数据接口
+      , method: 'POST'
+      , parseData: function (res) { //将原始数据解析成 table 组件所规定的数据
+        return {
+          "code": res.code, //解析接口状态
+          "msg": res.msg, //解析提示文本
+          "count": CoreUtil.isEmpty(res.data) ? 0 : res.data.total, //解析数据长度
+          "data": CoreUtil.isEmpty(res.data) ? null : res.data.records //解析数据列表
+        }
+      }
+      , cols: [
+        [
+          {type: 'checkbox', fixed: 'left'},
+          {field: 'id', title: '', sort: true, hide: true},
+
+          {field: 'sName', title: '学生姓名', sort: true},
+          {field: 'sNo', title: '学生学号', sort: true},
+          {field: 'ssNo', title: '学籍号', sort: true},
+          {field: 'classId', title: '班级', sort: true, templet: function (item) {
+              return CoreUtil.getClassLabel(classDatas, item.classId);
+            }
+          },
+          {field: 'gender', title: '性别', sort: true, templet: function (item) {
+              //获取类型对应的字典label
+              return CoreUtil.selectDictLabel(sexDatas, item.gender);
+            }
+          },
+          {field: 'joinTime', title: '入学时间', sort: true, templet : "<div>{{layui.util.toDateString(d.joinTime, 'yyyy-MM-dd')}}</div>"},
+          {width: 120, toolbar: "#stuTool", title: '操作'}
+        ]
+      ]
+    });
+
+
+    examTableIns = table.render({
+      elem: '#examTable'
+      , contentType: 'application/json'
+      , headers: {"authorization": token}
+      , page: true //开启分页
+      , url: '/dlExamPlan/listByPage' //数据接口
+      , where: {
+        status: 2//查询所有已经发布了的考试信息
+      }
+      , method: 'POST'
+      , parseData: function (res) { //将原始数据解析成 table 组件所规定的数据
+        return {
+          "code": res.code, //解析接口状态
+          "msg": res.msg, //解析提示文本
+          "count": CoreUtil.isEmpty(res.data) ? 0 : res.data.total, //解析数据长度
+          "data": CoreUtil.isEmpty(res.data) ? null : res.data.records //解析数据列表
+        }
+      }
+      , cols: [
+        [
+          {type: 'checkbox', fixed: 'left'},
+          {field: 'id', title: '', sort: true, hide: true},
+
+          {field: 'name', title: '考试标题', sort: true},
+          {field: 'gradeId', title: '参考年级', sort: true, templet: function (item) {
+              return CoreUtil.getBeanLabel(gradeDatas, item.gradeId, "id", "gradeNameLabel");
+            }},
+          {field: 'examType', title: '考试类型', sort: true, templet: function (item) {
+              return CoreUtil.selectDictLabel(examTypeDatas, item.examType);
+            }},
+          {field: 'timeStart', title: '考试时间', sort: true, templet:
+                    "<div>{{layui.util.toDateString(d.timeStart, 'yyyy-MM-dd')}}~{{layui.util.toDateString(d.timeEnd, 'yyyy-MM-dd')}} </div>"
+          },
+
+          {width: 120, toolbar: "#examTool", title: '操作'}
+        ]
+      ]
+    });
+
+
+    classExamTableIns = table.render({
+      elem: '#classExamTable'
+      , contentType: 'application/json'
+      , headers: {"authorization": token}
+      , page: true //开启分页
+      , url: '/dlExamResult/classList' //数据接口
+      , method: 'POST'
+      , parseData: function (res) { //将原始数据解析成 table 组件所规定的数据
+        return {
+          "code": res.code, //解析接口状态
+          "msg": res.msg, //解析提示文本
+          "count": CoreUtil.isEmpty(res.data) ? 0 : res.data.total, //解析数据长度
+          "data": CoreUtil.isEmpty(res.data) ? null : res.data.records //解析数据列表
+        }
+      }
+      , cols: [
+        [
+          {type: 'checkbox', fixed: 'left'},
+          {field: 'id', title: '', sort: true, hide: true},
+
+          {field: 'examTitle', title: '考试标题', sort: true},
+
+          {field: 'examType', title: '参考班级', sort: true, templet: function (item) {
+              return CoreUtil.getClassLabel(classDatas, item.classId);
+            }},
+
+
+          {width: 120, toolbar: "#classExamTool", title: '操作'}
+        ]
+      ]
+    });
+
+    form.on('select(select-stu-type)', function (data) {
+      var gradeId = $("#gradeId").val();
+      var classNode = $("#classId");
+      loadClassSelect(gradeId, classNode);
+    });
+
+    form.on('select(select-class-type)', function (data) {
+      var gradeId = $("#c_gradeId").val();
+      var classNode = $("#c_classId");
+      loadClassSelect(gradeId, classNode);
+    });
+
+
+    //列操作
+    table.on('tool(classExamTable)',function (obj) {
+      var data = obj.data;
+      switch (obj.event) {
+        case 'classScoreList':
+
+          openClassScoreDetailsWin(data.examId, data.classId);
+
+          break;
+        case 'edit':
+          break;
+      }
+    });
+
+    //列操作
+    table.on('tool(stuTable)',function (obj) {
+      var data = obj.data;
+      switch (obj.event) {
+        case 'stuScoreList':
+          openStuScoreDetailsWin(data.id);
+
+          break;
+        case 'edit':
+          break;
+      }
+    });
+
+    //列操作
+    table.on('tool(examTable)',function (obj) {
+      var data = obj.data;
+      switch (obj.event) {
+        case 'gradeScoreList':
+          openGradeScoreDetailsWin(data.id);
+          break;
+        case 'edit':
+          break;
+      }
+    });
+
+  });
+
+  function openGradeScoreDetailsWin(examId) {
+
+    var index = layer.open({
+      type: 2,
+      content: "/dlExamScore/gradeScoreReport?examId=" + examId + "&authorization=" + tokenQuery,
+      area: ['1200px', '700px'],
+      btn: ["确认"],
+      title: "年级学生考试分析报告",
+      shadeClose : true,
+      skin: 'demo-class',
+      maxmin: true,
+      yes: function (index, layero) {
+        layer.close(index);
+      }
+    });
+    layer.full(index);
+  }
+
+
+  function openStuScoreDetailsWin(studentId) {
+
+    var index = layer.open({
+      type: 2,
+      content: "/dlExamScore/stuScoreDetails?studentId=" + studentId + "&authorization=" + tokenQuery,
+      area: ['1200px', '700px'],
+      btn: ["确认"],
+      title: "学生考试分析报告",
+      shadeClose : true,
+      skin: 'demo-class',
+      maxmin: true,
+      yes: function (index, layero) {
+        layer.close(index);
+      }
+    });
+    layer.full(index);
+  }
+
+
+  function openClassScoreDetailsWin(examId, classId) {
+    var index = layer.open({
+      type: 2,
+      content: "/dlExamScore/classScoreReport?examId=" + examId +  "&classId=" + classId + "&authorization=" + tokenQuery,
+      area: ['1000px', '600px'],
+      btn: ["确认"],
+      title: "班级学生考试分析报告",
+      shadeClose : true,
+      skin: 'demo-class',
+      maxmin: true,
+      yes: function (index, layero) {
+        layer.close(index);
+      }
+    });
+    layer.full(index);
+  }
+
+
+
+
+  function loadClassSelect(gradeId, childNode) {
+    var params ={
+      gradeId: gradeId
+    };
+    childNode.empty();
+    CoreUtil.sendPost("/dlClass/getListByGradeId", params, function (res) {
+      var data = res.data;
+      childNode.append('<option value="">请选择班级</option>')
+      for(var i = 0; i < data.length; i ++ ){
+        childNode.append('<option value="'+ data[i].id +'">' + data[i].classNo +'班</option>');
+      }
+      form.render("select");
+    })
+  }
+
+
+
+
+  function searchClassExam() {
+    classExamTableIns.reload({
+      where: { //设定异步数据接口的额外参数，任意设
+        examTitle: $("#examTitle").val(),
+        gradeId: $("#c_gradeId").val(),
+        classId: $("#c_classId").val()
+      }
+      , page: {
+        curr: 1 //重新从第 1 页开始
+      }
+    });
+  }
+
+
+  function searchExam(){
+    //这里以搜索为例
+    examTableIns.reload({
+      where: { //设定异步数据接口的额外参数，任意设
+        name: $("#examName").val(),
+        status: 2
+      }
+      , page: {
+        curr: 1 //重新从第 1 页开始
+      }
+    });
+  }
+
+
+  //执行查询
+  function searchStu() {
+    //这里以搜索为例
+    stuTableIns.reload({
+      where: { //设定异步数据接口的额外参数，任意设
+        gradeId: $("#gradeId").val(),
+        classId: $("#classId").val(),
+        sName: $("#sName").val(),
+        ssNo: $("#ssNo").val()
+      }
+      , page: {
+        curr: 1 //重新从第 1 页开始
+      }
+    });
+  };
+</script>

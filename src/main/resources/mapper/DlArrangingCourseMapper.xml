@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.company.project.mapper.DlArrangingCourseMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.company.project.entity.DlArrangingCourseEntity" id="dlArrangingCourseMap">
+        <result property="id" column="id"/>
+        <result property="arrangingName" column="arranging_name"/>
+        <result property="termId" column="term_id"/>
+        <result property="weekDayNum" column="week_day_num"/>
+        <result property="amNum" column="am_num"/>
+        <result property="pmNum" column="pm_num"/>
+        <result property="nightNum" column="night_num"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="createId" column="create_id"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="updateId" column="update_id"/>
+        <result property="deleted" column="deleted"/>
+    </resultMap>
+
+
+</mapper>

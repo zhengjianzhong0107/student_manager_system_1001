@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.company.project.mapper.DlExamSubjectMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.company.project.entity.DlExamSubjectEntity" id="dlExamSubjectMap">
+        <result property="id" column="id"/>
+        <result property="examId" column="exam_id"/>
+        <result property="subjectId" column="subject_id"/>
+        <result property="testId" column="test_id"/>
+        <result property="remark" column="remark"/>
+        <result property="examDate" column="exam_date"/>
+        <result property="startTime" column="start_time"/>
+        <result property="endTime" column="end_time"/>
+    </resultMap>
+
+    <select id="isNotCompleteCount" parameterType="String" resultType="int">
+        select count(id) from dl_exam_subject where exam_id=#{examId} and (exam_date is null or start_time is null or end_time is null)
+    </select>
+
+
+    <select id="timeIsOverlap" parameterType="com.company.project.entity.DlExamSubjectEntity" resultMap="dlExamSubjectMap">
+        select * from dl_exam_subject where exam_id=#{examId} and exam_date=#{examDate} and not (start_time &gt; #{endTime}  or end_time &lt; #{startTime})
+    </select>
+
+</mapper>

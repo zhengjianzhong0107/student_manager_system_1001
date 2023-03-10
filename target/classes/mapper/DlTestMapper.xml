@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.company.project.mapper.DlTestMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.company.project.entity.DlTestEntity" id="dlTestMap">
+        <result property="id" column="id"/>
+        <result property="code" column="code"/>
+        <result property="testName" column="test_name"/>
+        <result property="notes" column="notes"/>
+        <result property="duration" column="duration"/>
+        <result property="score" column="score"/>
+        <result property="createId" column="create_id"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateId" column="update_id"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="self" column="self"/>
+        <result property="deleted" column="deleted"/>
+        <result property="subjectId" column="subject_id"/>
+        <result property="gradeType" column="grade_type"/>
+    </resultMap>
+
+
+</mapper>

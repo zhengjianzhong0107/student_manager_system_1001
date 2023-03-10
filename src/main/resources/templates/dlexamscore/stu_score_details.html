@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="/layui/css/layui.css">
+    <link rel="stylesheet" href="/css/custom.form.css">
+    <style>
+        th {
+            text-align: center
+        }
+        .table_margin{
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+
+        body .demo-class .layui-layer-title{
+            background:#5FB878; color:#fff; border: none;
+        }
+    </style>
+</head>
+<body>
+<!--成绩列表-->
+<blockquote class="layui-elem-quote" style="text-align: center"><b>历史成绩列表</b></blockquote>
+<div>
+    <div th:switch="${data.classType}">
+        <div th:case="1" class="table_margin">
+            <table class="layui-table">
+                <thead>
+                    <tr>
+                        <th rowspan="2" width="25%">考试名称</th>
+                        <th rowspan="2" width="10%">学生姓名</th>
+                        <th colspan="4" width="55%" style="text-align: center">成绩</th>
+                        <th rowspan="2" width="10%">操作</th>
+                    </tr>
+                    <tr>
+                        <th>语文</th>
+                        <th>数学</th>
+                        <th>英语</th>
+                        <th>总分</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="bean: ${data.list}">
+                        <td th:text="${bean.examTitle}"></td>
+                        <td th:text="${bean.studentName}"></td>
+                        <td th:text="${bean.yw}"></td>
+                        <td th:text="${bean.sx}"></td>
+                        <td th:text="${bean.yy}"></td>
+                        <td th:text="${bean.totalScore}"></td>
+                        <td><a class="layui-btn layui-btn-xs" th:onclick="openThisExamReport([[${bean.examId}]], [[${bean.studentId}]])">查看分析报告</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div th:case="*" class="table_margin">
+            <table class="layui-table">
+                <thead>
+                <tr>
+                    <th rowspan="2" width="25%">考试名称</th>
+                    <th rowspan="2" width="10%">学生姓名</th>
+                    <th colspan="10" width="55%" style="text-align: center">成绩</th>
+                    <th rowspan="2" width="10%">操作</th>
+                </tr>
+                <tr>
+                    <th>语文</th>
+                    <th>数学</th>
+                    <th>英语</th>
+                    <th>物理</th>
+                    <th>化学</th>
+                    <th>生物</th>
+                    <th>历史</th>
+                    <th>地理</th>
+                    <th>政治</th>
+                    <th>总分</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="bean: ${data.list}">
+                    <td th:text="${bean.examTitle}"></td>
+                    <td th:text="${bean.studentName}"></td>
+                    <td th:text="${bean.yw}"></td>
+                    <td th:text="${bean.sx}"></td>
+                    <td th:text="${bean.yy}"></td>
+                    <td th:text="${bean.wl}"></td>
+                    <td th:text="${bean.hx}"></td>
+                    <td th:text="${bean.sw}"></td>
+                    <td th:text="${bean.ls}"></td>
+                    <td th:text="${bean.dl}"></td>
+                    <td th:text="${bean.zz}"></td>
+                    <td th:text="${bean.totalScore}"></td>
+                    <td><a class="layui-btn layui-btn-xs" th:onclick="openThisExamReport([[${bean.examId}]], [[${bean.studentId}]])">查看分析报告</a></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<blockquote class="layui-elem-quote" style="text-align: center"><b>成绩统计分析图</b></blockquote>
+<div class="layui-row layui-col-space15">
+    <div class="layui-col-sm12 layui-col-md6 layui-col-lg6">
+        <div id="stuEchartLineDiv" style="width: 500px;height: 500px;"> </div>
+    </div>
+    <div class="layui-col-sm12 layui-col-md6 layui-col-lg6">
+        <div id="stuEchartZhuDiv" style="width: 500px;height: 500px;"> </div>
+    </div>
+</div>
+
+
+
+
+</body>
+</html>
+<script src="/layui/layui.all.js"></script>
+<script src="/js/core.util.js"></script>
+<script src="/js/echarts.min.js"></script>
+<script type="text/javascript" >
+
+    //获取token
+    var token = CoreUtil.getData("access_token");
+    //地址栏转义token中的#号
+    var tokenQuery = token.replace("#", "%23");
+    var tableIns1;
+    var table = layui.table;
+    var form = layui.form;
+    var layer = layui.layer;
+    var $ = jQuery = layui.jquery;
+    var laydate = layui.laydate;
+
+    var legend = "[[${data.legend}]]".replace(/&quot;/g,"\"");
+    var xAxis = "[[${data.xAxis}]]".replace(/&quot;/g,"\"");
+    var series = "[[${data.series}]]".replace(/&quot;/g,"\"");
+    var barSeries = "[[${data.barSeries}]]".replace(/&quot;/g,"\"");
+
+    layui.use(['table', 'layer', 'laydate'], function () {
+        var chartLine = echarts.init(document.getElementById('stuEchartLineDiv'));
+        var chartZhu = echarts.init(document.getElementById('stuEchartZhuDiv'));
+        var options = {
+            title: {
+                text: "成绩线条图",
+            },
+            legend: {
+                data: JSON.parse(legend)
+            },
+			grid: {
+				left: '10%',
+				bottom:'15%'
+			},
+            xAxis: {
+                data: JSON.parse(xAxis),
+				axisLabel: {//设置倾斜文本
+                    interval:0,
+					rotate:40,
+					formatter:function(value,index){
+						var ret = "";//拼接加\n返回的类目项
+                        var maxLength = 9;//每项显示文字个数
+                        var valLength = value.length;//X轴类目项的文字个数
+                        var rowN = Math.ceil(valLength / maxLength); //类目项需要换行的行数
+                        if (rowN > 1)//如果类目项的文字大于3,
+                        {
+                            for (var i = 0; i < rowN; i++) {
+                                var temp = "";//每次截取的字符串
+                                var start = i * maxLength;//开始截取的位置
+                                var end = start + maxLength;//结束截取的位置
+                                //这里也可以加一个是否是最后一行的判断，但是不加也没有影响，那就不加吧
+                                temp = value.substring(start, end) + "\n";
+                                ret += temp; //凭借最终的字符串
+                            }
+                            return ret;
+                        }else {
+                            return value;
+                        }
+                    }
+                },
+            },
+            yAxis: {
+                type: "value"
+            },
+            series: JSON.parse(series),
+            tooltip : {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'cross',
+                    label: {
+                        backgroundColor: '#6a7985'
+                    }
+                }
+            }
+        };
+        chartLine.setOption(options, true);
+
+        var barOptions = {
+            title: {
+                text: "成绩柱状图",
+            },
+            legend: {
+                data: JSON.parse(legend)
+            },
+			grid: {
+				left: '10%',
+				bottom:'15%'
+			},
+            xAxis: {
+                data: JSON.parse(xAxis),
+				axisLabel: {//设置倾斜文本
+                    interval:0,
+					rotate:40,
+					
+					formatter:function(value,index){
+                        
+						var ret = "";//拼接加\n返回的类目项
+                        var maxLength = 9;//每项显示文字个数
+                        var valLength = value.length;//X轴类目项的文字个数
+                        var rowN = Math.ceil(valLength / maxLength); //类目项需要换行的行数
+                        if (rowN > 1)//如果类目项的文字大于3,
+                        {
+                            for (var i = 0; i < rowN; i++) {
+                                var temp = "";//每次截取的字符串
+                                var start = i * maxLength;//开始截取的位置
+                                var end = start + maxLength;//结束截取的位置
+                                //这里也可以加一个是否是最后一行的判断，但是不加也没有影响，那就不加吧
+                                temp = value.substring(start, end) + "\n";
+                                ret += temp; //凭借最终的字符串
+                            }
+                            return ret;
+                        }else {
+                            return value;
+                        }
+                    }
+				},
+				
+            },
+            yAxis: {
+                type: "value"
+            },
+            series: JSON.parse(barSeries),
+            tooltip : {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'cross',
+                    label: {
+                        backgroundColor: '#6a7985'
+                    }
+                }
+            }
+        };
+        chartZhu.setOption(barOptions, true);
+
+    });
+    
+    
+    
+    function openThisExamReport(examId, studentId) {
+        layer.open({
+            type: 2,
+            content: "/dlExamScore/examAnalysisReport?examId=" + examId + "&studentId="+ studentId + "&authorization=" + tokenQuery,
+            area: ['1000px', '500px'],
+            btn: ["确认"],
+            title: "考试成绩分析报告",
+            shadeClose: true,
+            skin: 'demo-class',
+            maxmin: true,
+            yes: function (index, layero) {
+                layer.close(index);
+            }
+        });
+
+    }
+
+</script>

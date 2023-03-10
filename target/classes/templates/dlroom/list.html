@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <link rel="stylesheet" href="/layui/css/layui.css">
+  <link rel="stylesheet" href="/css/custom.form.css">
+</head>
+<body>
+<div class="panel panel-default operation" hidden>
+  <div class="panel-heading title"></div>
+<div class="layui-card-body">
+<form class="layui-form " action="" lay-filter="info" style="width: 700px;margin-top: 10px">
+      <input name="id" hidden/>
+        <div class="layui-form-item">
+      <label class="layui-form-label">教室名称</label>
+      <div class="layui-input-block">
+        <input type="roomName" name="roomName" placeholder="请输入教室名称" autocomplete="off" class="layui-input">
+      </div>
+    </div>
+        <div class="layui-form-item">
+      <label class="layui-form-label">教室类型</label>
+      <div class="layui-input-block">
+
+          <select id="roomType" name="roomType" lay-filter="select-type" th:with="roomType=${@sysDictService.getType('classroom_type')}">
+              <option value="0">请选择</option>
+              <option th:each="dict : ${roomType}" th:text="${dict.label}" th:value="${dict.value}"></option>
+          </select>
+      </div>
+    </div>
+        <div class="layui-form-item">
+      <label class="layui-form-label">容纳量</label>
+      <div class="layui-input-block">
+        <input type="capacity" name="capacity" placeholder="请输入容纳量" autocomplete="off" class="layui-input">
+      </div>
+    </div>
+
+        <div class="layui-form-item">
+      <label class="layui-form-label">描述</label>
+      <div class="layui-input-block">
+        <input type="roomDesc" name="roomDesc" placeholder="请输入描述" autocomplete="off" class="layui-input">
+      </div>
+    </div>
+        <div class="layui-form-item">
+      <label class="layui-form-label">地址</label>
+      <div class="layui-input-block">
+        <input type="address" name="address" placeholder="请输入地址" autocomplete="off" class="layui-input">
+      </div>
+    </div>
+        <div class="layui-form-item">
+      <label class="layui-form-label">备注</label>
+      <div class="layui-input-block">
+        <input type="remark" name="remark" placeholder="请输入" autocomplete="off" class="layui-input">
+      </div>
+    </div>
+  <div class="layui-form-item">
+  <div class="layui-input-block">
+    <button type="submit" class="layui-btn" lay-submit="" lay-filter="submit">保存</button>
+    <button  class="layui-btn layui-btn-primary" id="btn_cancel">返回</button>
+  </div>
+</div>
+</form>
+</div>
+</div>
+
+<div class="table_div">
+  <div id="searchParam"  shiro:hasPermission="dlRoom:list">
+    <div class="layui-form-item">
+      <div class="layui-input-inline">
+        <input type="text" id="s_roomName" class="layui-input"  autocomplete="off" placeholder="请输入">
+      </div>
+        <div class="layui-input-inline layui-form">
+            <select id="s_roomType" name="s_roomType" lay-filter="select-type" th:with="roomType=${@sysDictService.getType('classroom_type')}">
+                <option value="">请选择</option>
+                <option th:each="dict : ${roomType}" th:text="${dict.label}" th:value="${dict.value}"></option>
+            </select>
+        </div>
+
+      <div class="layui-input-inline ">
+        <button class="layui-btn" onclick="search()"  id="search">查询</button>
+        <button class="layui-btn"   id="export">导出全部</button>
+      </div>
+    </div>
+
+  </div>
+  <table class="layui-table" id="showTable" lay-filter="showTable" ></table>
+</div>
+<script type="text/html" id="toolbar">
+  <div class="layui-btn-container">
+    <button class="layui-btn layui-btn-sm" lay-event="add"  shiro:hasPermission="dlRoom:add">添加</button>
+    <button class="layui-btn layui-btn-sm" lay-event="batchDeleted" shiro:hasPermission="dlRoom:delete">删除</button>
+  </div>
+</script>
+<script type="text/html" id="tool">
+  <a class="layui-btn layui-btn-xs" lay-event="edit" shiro:hasPermission="dlRoom:update">编辑</a>
+  <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del" shiro:hasPermission="dlRoom:delete">删除</a>
+</script>
+
+</body>
+</html>
+<script src="/layui/layui.all.js"></script>
+<script src="/js/core.util.js"></script>
+<script>
+  //获取token
+  var token = CoreUtil.getData("access_token");
+  //地址栏转义token中的#号
+  var tokenQuery = token.replace("#", "%23");
+  var datas = "[[${@sysDictService.getType('classroom_type')}]]".replace(/&quot;/g,"\"");
+  var tableIns1;
+  var table = layui.table;
+  var form = layui.form;
+  var layer = layui.layer;
+  var $ = jQuery = layui.jquery;
+  var laydate = layui.laydate;
+
+  layui.use(['table', 'layer', 'laydate'], function () {
+
+    //加载table
+    tableIns1 = table.render({
+      elem: '#showTable'
+      , contentType: 'application/json'
+      , headers: {"authorization": token}
+      , page: true //开启分页
+      , url: '/dlRoom/listByPage' //数据接口
+      , method: 'POST'
+      , parseData: function (res) { //将原始数据解析成 table 组件所规定的数据
+        return {
+          "code": res.code, //解析接口状态
+          "msg": res.msg, //解析提示文本
+          "count": CoreUtil.isEmpty(res.data) ? 0 : res.data.total, //解析数据长度
+          "data": CoreUtil.isEmpty(res.data) ? null : res.data.records //解析数据列表
+        }
+      }
+      , cols: [
+        [
+          {type: 'checkbox', fixed: 'left'},
+          {field: 'roomName', title: '教室名称', sort: true},
+          {field: 'roomType', title: '教室类型', sort: true, templet: function (item) {
+            //获取类型对应的字典label
+            return CoreUtil.selectDictLabel(datas, item.roomType);
+            }
+          },
+          {field: 'capacity', title: '容纳量', sort: true},
+          {field: 'roomDesc', title: '描述', sort: true},
+          {field: 'address', title: '地址', sort: true},
+          {field: 'status', title: '状态', sort: true, templet: function (item) {
+                  if (item.status === 1) {
+                      return '  <input type="checkbox" name = "' + item.id + '" value="1" lay-skin="switch" lay-text="正常|停用" checked  lay-filter="onOff">';
+                  }else{
+                      return '  <input type="checkbox" name = "' + item.id + '" value="0" lay-skin="switch" lay-text="正常|停用"  lay-filter="onOff">';
+                  }
+              }},
+          {field: 'remark', title: '备注', sort: true},
+          {width: 120, toolbar: "#tool", title: '操作', fixed: 'right'}
+        ]
+      ]
+      , toolbar: '#toolbar'
+    });
+
+      form.on('switch(onOff)', function (obj) {
+          var id = this.name;
+          var value = this.value;
+          value = value == 1 ? 0 : 1;  // 状态取反保存
+          CoreUtil.sendPut("/dlRoom/updateStatus",{id: id, status: value},function (res) {
+              $(".table_div").show();
+              $(".operation").hide();
+              search();
+          });
+
+      });
+
+
+    //表头工具
+    table.on('toolbar(showTable)', function(obj){
+      switch(obj.event){
+        case 'batchDeleted':
+          var checkStatus = table.checkStatus(obj.config.id);
+          var data = checkStatus.data;
+          if(data.length==0){
+            layer.msg("请选择要批量删除的列");
+          }else {
+            var ids = [];
+            $(data).each(function (index,item) {
+              ids.push(item.id);
+            });
+            tipDialog(ids);
+          }
+          break;
+        case 'add':
+          $(".table_div").hide();
+          $(".operation").show();
+          $(".title").html("新增");
+          $(".operation input[name=id]").val("");
+          $(".operation input[name=roomName]").val("");
+          $(".operation input[name=roomType]").val("");
+          $(".operation input[name=capacity]").val("");
+          $(".operation input[name=hasNum]").val("");
+          $(".operation input[name=roomDesc]").val("");
+          $(".operation input[name=address]").val("");
+          $(".operation input[name=status]").val("");
+          $(".operation input[name=remark]").val("");
+          break;
+      };
+    });
+    //列操作
+    table.on('tool(showTable)',function (obj) {
+      var data = obj.data;
+      switch (obj.event) {
+        case 'del':
+          var ids=[];
+          ids.push(data.id);
+          tipDialog(ids);
+          break;
+        case 'edit':
+          $(".table_div").hide();
+          $(".operation").show();
+          $(".title").html("编辑");
+          $(".operation input[name=id]").val(data.id);
+          $(".operation input[name=roomName]").val(data.roomName);
+          //$(".operation input[name=roomType]").val(data.roomType);
+          if (!CoreUtil.isEmpty(data.roomType)) {
+              $("#roomType").find('option[value="'+data.roomType+'"]').prop('selected',true);
+              form.render();
+          }
+          $(".operation input[name=capacity]").val(data.capacity);
+          $(".operation input[name=roomDesc]").val(data.roomDesc);
+          $(".operation input[name=address]").val(data.address);
+          $(".operation input[name=status]").val(data.status);
+          $(".operation input[name=remark]").val(data.remark);
+          break;
+      }
+    });
+
+
+    //导出
+    $('#export').on('click', function () {
+      //原先分页limit
+      var exportParams = {
+        limit: 10000,
+        key: $("#key").val()
+      };
+      CoreUtil.sendPost("/dlRoom/listByPage", exportParams, function (res) {
+        //初始化渲染数据
+        if (res.data != null && res.data.records != null) {
+          table.exportFile(tableIns1.config.id, res.data.records, 'xls');
+        }
+      });
+    });
+
+    //删除
+    var tipDialog=function (ids) {
+      layer.open({
+        content: "确定要删除么?",
+        yes: function(index, layero){
+          layer.close(index); //如果设定了yes回调，需进行手工关闭
+          CoreUtil.sendDelete("/dlRoom/delete",ids,function (res) {
+            layer.msg(res.msg, {time:1000},function () {
+              search();
+            });
+          });
+        }
+      });
+    };
+
+    //返回
+    $("#btn_cancel").click(function() {
+      $(".table_div").show();
+      $(".operation").hide();
+      return false;
+    });
+
+    //监听保存
+    form.on('submit(submit)', function(data){
+      if(data.field.id===undefined || data.field.id===null || data.field.id===""){
+        CoreUtil.sendPost("/dlRoom/add",data.field,function (res) {
+          $(".table_div").show();
+          $(".operation").hide();
+          search();
+        });
+      }else {
+        CoreUtil.sendPut("/dlRoom/update",data.field,function (res) {
+          $(".table_div").show();
+          $(".operation").hide();
+          search();
+        });
+      }
+
+      return false;
+    });
+  });
+
+  //执行查询
+  function search() {
+    //这里以搜索为例
+    tableIns1.reload({
+      where: { //设定异步数据接口的额外参数，任意设
+        roomType: $("#s_roomType").val(),
+        roomName: $("#s_roomName").val()
+      }
+      , page: {
+        curr: 1 //重新从第 1 页开始
+      }
+    });
+  };
+</script>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.company.project.mapper.DlArrSetMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.company.project.entity.DlArrSetEntity" id="dlArrSetMap">
+        <result property="id" column="id"/>
+        <result property="col" column="col"/>
+        <result property="row" column="row"/>
+        <result property="type" column="type"/>
+        <result property="arrId" column="arr_id"/>
+        <result property="typeId" column="type_id"/>
+        <result property="label" column="label"/>
+    </resultMap>
+
+    <select id="list" parameterType="com.company.project.entity.DlArrSetEntity" resultMap="dlArrSetMap">
+        select * from dl_arr_set
+        <where>
+            <if test="arrId != null and arrId != ''">
+                and arr_id=#{arrId}
+            </if>
+            <if test="type != null">
+                and type=#{type}
+            </if>
+            <if test="typeId != null and typeId != ''">
+                and type_id=#{typeId}
+            </if>
+        </where>
+    </select>
+
+
+</mapper>

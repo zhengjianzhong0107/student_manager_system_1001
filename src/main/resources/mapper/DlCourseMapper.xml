@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.company.project.mapper.DlCourseMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.company.project.entity.DlCourseEntity" id="dlCourseMap">
+        <result property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="grade" column="grade"/>
+        <result property="weekNum" column="week_num"/>
+        <result property="subjectId" column="subject_id"/>
+        <result property="courseType" column="course_type"/>
+        <result property="createId" column="create_id"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateId" column="update_id"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+
+</mapper>

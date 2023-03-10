@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.company.project.mapper.DlArrBaseMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.company.project.entity.DlArrBaseEntity" id="dlArrBaseMap">
+        <result property="id" column="id"/>
+        <result property="teacherId" column="teacher_id"/>
+        <result property="courseId" column="course_id"/>
+        <result property="classId" column="class_id"/>
+        <result property="roomId" column="room_id"/>
+        <result property="teacherName" column="teacher_name"/>
+        <result property="courseName" column="course_name"/>
+        <result property="className" column="class_name"/>
+        <result property="roomName" column="room_name"/>
+    </resultMap>
+
+    <select id="getTeacherCourseNumList" resultMap="dlArrBaseMap" parameterType="String">
+        select teacher_id, teacher_name, sum(course_num) as course_num from dl_arr_base where arr_id=#{arrId} group by teacher_id
+    </select>
+
+    <select id="getTeacherCourseNum" resultType="int" parameterType="com.company.project.entity.DlArrBaseEntity">
+        select sum(course_num) from dl_arr_base where arr_id=#{arrId} and teacher_id=#{teacherId} group by teacher_id
+    </select>
+
+    <select id="getClassCourseNumList" resultMap="dlArrBaseMap" parameterType="String">
+        select class_id, class_name, sum(course_num) as course_num from dl_arr_base where arr_id=#{arrId} group by class_id order by course_num desc
+    </select>
+
+    <select id="getClassCourseNum" resultType="int" parameterType="com.company.project.entity.DlArrBaseEntity">
+        select sum(course_num) from dl_arr_base where arr_id=#{arrId} and class_id=#{classId} group by class_id
+    </select>
+
+</mapper>

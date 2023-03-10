@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.company.project.mapper.DlStudentMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.company.project.entity.DlStudentEntity" id="dlStudentMap">
+        <result property="id" column="id"/>
+        <result property="sNo" column="s_no"/>
+        <result property="ssNo" column="ss_no"/>
+        <result property="idCard" column="id_card"/>
+        <result property="classId" column="class_id"/>
+        <result property="matherName" column="mather_name"/>
+        <result property="matherPhone" column="mather_phone"/>
+        <result property="age" column="age"/>
+        <result property="gender" column="gender"/>
+        <result property="phoneNum" column="phone_num"/>
+        <result property="grade" column="grade"/>
+        <result property="fatherPhone" column="father_phone"/>
+        <result property="fatherName" column="father_name"/>
+        <result property="joinType" column="join_type"/>
+        <result property="joinTime" column="join_time"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="createId" column="create_id"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="updateId" column="update_id"/>
+        <result property="remark" column="remark"/>
+    </resultMap>
+    <select id="getClassTypeByStudentId" parameterType="String" resultType="Integer">
+        select c.class_type from dl_student s JOIN dl_class c ON s.class_id=c.id
+        where s.id=#{studentId}
+    </select>
+
+
+
+
+</mapper>

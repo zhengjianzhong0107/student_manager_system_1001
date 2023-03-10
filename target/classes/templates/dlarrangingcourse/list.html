@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="/layui/css/layui.css">
+    <link rel="stylesheet" href="/css/custom.form.css">
+    <link rel="stylesheet" href="/layui/extend/steps/style.css">
+    <style>
+        .table-class table td{
+            text-align: center;
+        }
+        .fixed_div{
+            position:fixed;
+            right:100px;
+            bottom:0px;
+        }
+
+
+        .bg-color{
+            background-color: #8D8D8D;
+        }
+
+        .no-arr-bg-color{
+            background-color: #8D8D8D;
+            cursor: not-allowed;
+        }
+		
+		.pre-bg-color{
+            background-color: #FC9003;
+            cursor: not-allowed;
+        }
+		
+		.arred-bg-color{
+            background-color: #a78369;
+            cursor: not-allowed;
+        }
+
+    </style>
+</head>
+<body>
+
+
+<div id="step_demo" class="step-body" hidden>
+    <div class="step-header" style="width:80%;overflow: hidden;">
+        <ul>
+            <li>
+                <span class="step-name">基本信息设置</span>
+            </li>
+            <li>
+                <span class="step-name">规则设置</span>
+            </li>
+            <li>
+                <span class="step-name">预排课</span>
+            </li>
+            <li>
+                <span class="step-name">自动排课</span>
+            </li>
+            <li>
+                <span class="step-name">完成</span>
+            </li>
+        </ul>
+    </div>
+    <br>
+    <div class="step-content">
+        <!-- 基本信息配置 -->
+        <div class="step-list ">
+            <div class="layui-tab" lay-filter="base_filter">
+                <ul class="layui-tab-title">
+                    <li class="layui-this" lay-id="111">基本信息设置</li>
+                    <li lay-id="222">教师课程信息设置</li>
+                </ul>
+                <div class="layui-tab-content">
+                    <div class="layui-tab-item layui-show">
+                        <div class="layui-form">
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">计划名称</label>
+                                <div class="layui-input-inline">
+                                    <input id="arrangingName" name="arrangingName" placeholder="请输入排课计划名称" autocomplete="off" class="layui-input" lay-verify="required">
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">学期</label>
+                                <div class="layui-input-inline">
+                                    <select id="termId" name="termId" lay-filter="select-term" th:with="list=${@dlTermService.getJSONList()}" lay-search="" lay-verify="required">
+                                        <option value="">请选择学期</option>
+                                        <option th:each="bean : ${list}" th:text="${bean.title}" th:value="${bean.id}"></option>
+                                    </select>
+                                </div>
+
+                            </div>
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">周上课天数</label>
+                                <div class="layui-input-inline">
+                                    <input id="weekDayNum" name="weekDayNum" placeholder="请输入周上课天数" autocomplete="off" class="layui-input" lay-verify="required|number">
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">上午课程数</label>
+                                <div class="layui-input-inline">
+                                    <input id="amNum" name="amNum" placeholder="请输入上午课程数" autocomplete="off" class="layui-input" lay-verify="required|number">
+                                </div>
+                                <label class="layui-form-label">下午课程数</label>
+                                <div class="layui-input-inline">
+                                    <input id="pmNum" name="pmNum" placeholder="请输入下午课程数" autocomplete="off" class="layui-input" lay-verify="required|number">
+                                </div>
+                                <label class="layui-form-label">晚上课程数</label>
+                                <div class="layui-input-inline">
+                                    <input id="nightNum" name="nightNum" placeholder="请输入晚上课程数" autocomplete="off" class="layui-input" lay-verify="required|number">
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">参排年级</label>
+								<div class="layui-input-block" id="gradeListDiv">
+								</div>
+                            </div>
+
+                            <div class="layui-form-item fixed_div">
+                                <div class="layui-input-block">
+                                    <button class="layui-btn layui-btn-primary" id="btn_cancel">返回</button>
+                                    <button class="layui-btn" id="" onclick="nextTabs()">下一步</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="layui-tab-item">
+						<blockquote class="layui-elem-quote">
+						注意：1、在编辑情况下，如果基本信息中参排年级或者学期有变更，需要重新引入教学数据；在新增情况下，点击引入教学数据，将当前学期中的教学数据引入到排课功能中。<br/>
+						2、在重新引入教学数据，同时也会删除之前设置的预排课和不排课信息，所以这里需要谨慎！
+						</blockquote>
+                        <div class="layui-input-inline">
+                            <input id="ss" name="ss" placeholder="教师/班级/课程名称" autocomplete="off" class="layui-input">
+                        </div>
+                        <button class="layui-btn" onclick="loadTcTableIns()"><i class="layui-icon">&#xe615;</i>搜索</button>
+                        <table id="teacherCourseSetTab" class="layui-table" lay-filter="tcTab" >
+                        </table>
+                        <div class="layui-form-item  fixed_div">
+                            <div class="layui-input-block">
+                                <button class="layui-btn layui-btn-primary" onclick="preTabs()">上一步</button>
+                                <button class="layui-btn" id="baseNext" onclick="nextStep(1)">下一步</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+
+        </div>
+
+        <!-- 规则配置 -->
+        <div class="step-list">
+            <div class="layui-row layui-col-space15">
+                <div class="layui-col-sm12 layui-col-md3 layui-col-lg3">
+                    <div class="layui-card">
+                        <div class="layui-card-body mini-bar" id="leftTree">
+                            <div class="layui-form">
+                                <select id="arrType" name="arrType" lay-filter="select-arr-type" th:with="roomType=${@sysDictService.getType('arr_type')}" lay-search="">
+                                    <option value="">请选择不排课类型</option>
+                                    <option th:each="dict : ${roomType}" th:text="${dict.label}" th:value="${dict.value}"></option>
+                                </select>
+                            </div>
+                            <hr class="layui-bg-green">
+                            <fieldset class="layui-elem-field">
+                                <legend></legend>
+                                <div class="layui-field-box" >
+                                    <div id="teacherArr"   hidden>
+                                        <div class="layui-form-item">
+                                            <div class="layui-input-inline" style="width: 150px;">
+                                                <input id="sTeacherName" name="sTeacherName" placeholder="教师名称" autocomplete="off" class="layui-input" style="width: 150px;">
+                                            </div>
+                                            <button class="layui-btn layui-btn-primary layui-btn-sm" onclick="loadTeacherList()" style="margin-top: 5px;"><i class="layui-icon">&#xe615;</i></button>
+                                        </div>
+                                        <div id="teacherList">
+
+                                        </div>
+                                    </div>
+                                    <div id="classArr" hidden>
+                                        <div class="layui-form-item">
+                                            <div class="layui-input-inline" style="width: 150px;">
+                                                <input id="sClassName" name="sClassName" placeholder="班级名称" autocomplete="off" class="layui-input" style="width: 150px;">
+                                            </div>
+                                            <button class="layui-btn layui-btn-primary layui-btn-sm" onclick="loadClassList()" style="margin-top: 5px;"><i class="layui-icon">&#xe615;</i></button>
+                                        </div>
+                                        <div id="classList">
+
+                                        </div>
+                                    </div>
+                                    <div id="courseArr" hidden>
+                                        <div class="layui-form-item">
+                                            <div class="layui-input-inline" style="width: 150px;">
+                                                <input id="sCourseName" name="sCourseName" placeholder="教师/班级/课程名称" autocomplete="off" class="layui-input" style="width: 150px;">
+                                            </div>
+                                            <button class="layui-btn layui-btn-primary layui-btn-sm" onclick="loadCourseList()" style="margin-top: 5px;"><i class="layui-icon">&#xe615;</i></button>
+                                        </div>
+                                        <div id="courseList">
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </fieldset>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="layui-col-sm12 layui-col-md8 layui-col-lg8 table-class">
+                    <table id="courseSetTab" class="layui-table">
+
+                    </table>
+                </div>
+                <div class="layui-col-sm1 layui-col-md1 layui-col-lg1 table-class">
+
+                </div>
+            </div>
+            <div class="layui-form-item fixed_div">
+                <div class="layui-input-block">
+                    <button class="layui-btn layui-btn-primary" onclick="preStep()">上一步</button>
+                    <button class="layui-btn" onclick="nextStep(2)">下一步</button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 预排课配置 -->
+        <div class="step-list">
+            <div class="layui-row layui-col-space15">
+                <div class="layui-col-sm12 layui-col-md3 layui-col-lg3">
+                    <div id="pCourseArr" class="layui-card-body mini-bar">
+                        <div class="layui-form-item">
+                            <div class="layui-input-inline" style="width: 150px;">
+                                <input id="pCourseName" name="pCourseName" placeholder="教师/班级/课程名称" autocomplete="off" class="layui-input" style="width: 150px;">
+                            </div>
+                            <button class="layui-btn layui-btn-primary layui-btn-sm" onclick="loadPreCourseList()" style="margin-top: 5px;"><i class="layui-icon">&#xe615;</i></button>
+                        </div>
+                        <hr class="layui-bg-green">
+                        <fieldset class="layui-elem-field">
+                            <legend></legend>
+                            <div class="layui-field-box" >
+                                <div id="pCourseList">
+
+                                </div>
+                            </div>
+                        </fieldset>
+                    </div>
+                </div>
+                <div class="layui-col-sm12 layui-col-md8 layui-col-lg8 table-class">
+                    <table id="preSetTab" class="layui-table">
+
+                    </table>
+                </div>
+                <div class="layui-col-sm1 layui-col-md1 layui-col-lg1 table-class">
+
+                </div>
+            </div>
+
+            <div class="layui-form-item fixed_div">
+                <div class="layui-input-block">
+                    <button class="layui-btn layui-btn-primary" onclick="preStep();loadSetTabs();">上一步</button>
+                    <button class="layui-btn" onclick="nextStep(3)">下一步</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 自动排课 -->
+        <div class="step-list">
+
+            <div class="layui-form-item">
+                <button class="layui-btn" onclick="actionArr()" shiro:hasPermission="dlArrangingCourse:arrCourse">开始排课</button>
+                <button class="layui-btn" onclick="exchangeCourse()" shiro:hasPermission="dlCourseTable:exchange">课程调整</button>
+            </div>
+            <div class="layui-form-item">
+                <div id="courseTableTab">
+
+                </div>
+            </div>
+
+
+            <div class="layui-form-item fixed_div">
+                <div class="layui-input-block">
+                    <button class="layui-btn layui-btn-primary" onclick="preStep();">上一步</button>
+                    <button class="layui-btn" onclick="nextStep(4)">完成/保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="table_div">
+    <div id="searchParam"  shiro:hasPermission="dlArrangingCourse:list">
+        <div class="layui-form-item">
+            <div class="layui-input-inline">
+                <input type="text" id="key" class="layui-input"  autocomplete="off" placeholder="请输入">
+            </div>
+
+            <div class="layui-input-inline ">
+                <button class="layui-btn" onclick="search()"  id="search">查询</button>
+                <button class="layui-btn"   id="export">导出全部</button>
+            </div>
+        </div>
+
+    </div>
+    <table class="layui-table" id="showTable" lay-filter="showTable" ></table>
+</div>
+
+
+
+<script type="text/html" id="tcBar">
+    <div class="layui-btn-container">
+        <button class="layui-btn layui-btn-sm" lay-event="add"  shiro:hasPermission="dlArrBase:add">引入教学数据</button>
+    </div>
+</script>
+
+<script type="text/html" id="toolbar">
+    <div class="layui-btn-container">
+        <button class="layui-btn layui-btn-sm" lay-event="add"  shiro:hasPermission="dlArrangingCourse:add">添加</button>
+        <button class="layui-btn layui-btn-sm" lay-event="batchDeleted" shiro:hasPermission="dlArrangingCourse:delete">删除</button>
+    </div>
+</script>
+<script type="text/html" id="tool">
+    <a class="layui-btn layui-btn-xs" lay-event="edit" shiro:hasPermission="dlArrangingCourse:update">编辑</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del" shiro:hasPermission="dlArrangingCourse:delete">删除</a>
+</script>
+
+</body>
+</html>
+<script src="/layui/layui.all.js"></script>
+<script src="/js/core.util.js"></script>
+<script src="/layui/config.js"></script>
+<script>
+    //获取token
+    var token = CoreUtil.getData("access_token");
+    //地址栏转义token中的#号
+    var tokenQuery = token.replace("#", "%23");
+    var tableIns1;
+    var tcTableIns;
+    var courseTableIns;
+
+
+    var termDatas = "[[${@dlTermService.getAllJSONList()}]]".replace(/&quot;/g,"\"");
+
+
+    var table = layui.table;
+    var form = layui.form;
+    var layer = layui.layer;
+    var $ = jQuery = layui.jquery;
+    var laydate = layui.laydate;
+    var tree = layui.tree;
+    var element = layui.element;
+
+
+
+    var $step = null;
+    var arrId = null;
+    var classId = null;
+    var teacherId = null;
+    var courseId = null;
+    var courseLab = null;
+    var preCourseId = null;
+
+    layui.use(['table', 'layer', 'laydate', 'steps', 'tree', 'element'], function () {
+        $step = $("#step_demo").step();
+
+
+
+
+        //加载table
+        tableIns1 = table.render({
+            elem: '#showTable'
+            , contentType: 'application/json'
+            , headers: {"authorization": token}
+            , page: true //开启分页
+            , url: '/dlArrangingCourse/listByPage' //数据接口
+            , method: 'POST'
+            , parseData: function (res) { //将原始数据解析成 table 组件所规定的数据
+                return {
+                    "code": res.code, //解析接口状态
+                    "msg": res.msg, //解析提示文本
+                    "count": CoreUtil.isEmpty(res.data) ? 0 : res.data.total, //解析数据长度
+                    "data": CoreUtil.isEmpty(res.data) ? null : res.data.records //解析数据列表
+                }
+            }
+            , cols: [
+                [
+                    {type: 'checkbox', fixed: 'left'},
+                    {field: 'id', title: 'ID', sort: true, hide: true},
+                    {field: 'arrangingName', title: '排课计划', sort: true, width: 230},
+                    {field: 'termId', title: '学期', width: 230, sort: true, templet: function (item) {
+                            return CoreUtil.getBeanLabel(termDatas, item.termId, 'id', 'title');
+                        }},
+                    {field: 'weekDayNum', title: '周上课天数', sort: true},
+                    {field: 'amNum', title: '上午课程数', sort: true},
+                    {field: 'pmNum', title: '下午课程数', sort: true},
+                    {field: 'nightNum', title: '晚上课程数', sort: true},
+                    {field: 'status', title: '状态', sort: true, templet: function (item) {
+                            if (item.status === 1) {
+                                return '  <input type="checkbox" name = "' + item.id + '" value="1" lay-skin="switch" lay-text="启用|禁用" checked  lay-filter="onOff">';
+                            }else{
+                                return '  <input type="checkbox" name = "' + item.id + '" value="0" lay-skin="switch" lay-text="启用|禁用"  lay-filter="onOff">';
+                            }
+                        }},
+                    {width: 120, toolbar: "#tool", title: '操作'}
+                ]
+            ]
+            , toolbar: '#toolbar'
+        });
+
+        form.on('switch(onOff)', function (obj) {
+            var id = this.name;
+            var value = this.value;
+            value = value == 1 ? 0 : 1;  // 状态取反保存
+            var str = value == 1 ? "确定要开启该排课的课程信息吗？": "确定要关闭该排课信息吗？";
+            layer.open({
+                content: str,
+                btn: ['确定', '取消'],
+                yes: function(index, layero){
+                    layer.close(index); //如果设定了yes回调，需进行手工关闭
+                    CoreUtil.sendPut("/dlArrangingCourse/update",{id: id, status: value},function (res) {
+                        layer.msg("操作成功");
+                        search();
+                    });
+                },
+                btn2: function (index, layero) {
+                    search();
+                }
+            });
+        });
+
+
+        tcTableIns = table.render({
+            elem: '#teacherCourseSetTab'
+            , contentType: 'application/json'
+            , headers: {"authorization": token}
+            , page: true //开启分页
+            , method: 'POST'
+            , parseData: function (res) { //将原始数据解析成 table 组件所规定的数据
+                return {
+                    "code": res.code, //解析接口状态
+                    "msg": res.msg, //解析提示文本
+                    "count": CoreUtil.isEmpty(res.data) ? 0 : res.data.total, //解析数据长度
+                    "data": CoreUtil.isEmpty(res.data) ? null : res.data.records //解析数据列表
+                }
+            }
+            , cols: [
+                [
+                    {type: 'checkbox', fixed: 'left'},
+                    {field: 'teacherName', title: '教师名称', sort: true},
+                    {field: 'courseName', title: '课程名称', sort: true},
+                    {field: 'className', title: '班级名称', sort: true},
+                    {field: 'roomName', title: '教室名称', sort: true},
+                    {field: 'courseNum', title: '周课时(编辑)', sort: true, edit: "text"}
+                ]
+            ]
+            , toolbar: '#tcBar'
+        });
+
+
+        courseTableIns = table.render({
+            elem: '#courseTableTab'
+            , contentType: 'application/json'
+            , headers: {"authorization": token}
+            , page: true //开启分页
+            , method: 'POST'
+            , parseData: function (res) { //将原始数据解析成 table 组件所规定的数据
+                return {
+                    "code": res.code, //解析接口状态
+                    "msg": res.msg, //解析提示文本
+                    "count": CoreUtil.isEmpty(res.data) ? 0 : res.data.total, //解析数据长度
+                    "data": CoreUtil.isEmpty(res.data) ? null : res.data.records //解析数据列表
+                }
+            }
+            , cols: [
+                [
+                    {type: 'checkbox', fixed: 'left'},
+                    {field: 'teacherName', title: '教师', sort: true},
+                    {field: 'courseName', title: '课程', sort: true},
+                    {field: 'className', title: '班级', sort: true},
+                    {field: 'roomName', title: '上课时间', sort: true, templet: function(obj){
+                        return "星期" + obj.col + " 第" + obj.row + "节";
+                        }},
+                ]
+            ]
+        });
+
+
+
+        table.on('edit(tcTab)', function(obj){ //注：edit是固定事件名，test是table原始容器的属性 lay-filter="对应的值"
+
+            if(obj.field == 'capacity'){
+                if(!CoreUtil.isRealNum(obj.value)){
+                    layer.msg("请输入数值");
+                    return;
+                }
+            }
+            var params = {};
+            if(!CoreUtil.isRealNum(obj.value)){
+                layer.msg("修改失败，请输入数值");
+                // loadTcTableIns();
+                return;
+            }
+            params.courseNum = obj.value;
+            params.id = obj.data.id;
+            CoreUtil.sendPut("/dlArrBase/update", params, function (res) {
+                layer.msg("修改成功");
+            });
+
+        });
+
+        table.on('toolbar(tcTab)', function (obj) {
+            layer.msg("消息");
+            if(obj.event == 'add'){
+                //执行添加课程信息
+                CoreUtil.sendPost("/dlArrBase/addTcs", {arrId: arrId}, function (res) {
+                    layer.msg(res.msg);
+                    loadTcTableIns();
+                });
+            }
+        });
+
+
+        //表头工具
+        table.on('toolbar(showTable)', function(obj){
+            switch(obj.event){
+                case 'batchDeleted':
+                    var checkStatus = table.checkStatus(obj.config.id);
+                    var data = checkStatus.data;
+                    if(data.length==0){
+                        layer.msg("请选择要批量删除的列");
+                    }else {
+                        var ids = [];
+                        $(data).each(function (index,item) {
+                            ids.push(item.id);
+                        });
+                        tipDialog(ids);
+                    }
+                    break;
+                case 'add':
+                    arrId = null;
+                    loadTcTableIns();
+                    $(".table_div").hide();
+                    $("#step_demo").show();
+                    $(".title").html("新增");
+                    $("#id").val("");
+                    $("#arrangingName").val("");
+                    $("#termId").val("");
+                    $("#weekDayNum").val("");
+                    $("#amNum").val("");
+                    $("#pmNum").val("");
+                    $("#nightNum").val("");
+                    $("#status").val("");
+                    break;
+            };
+        });
+        //列操作
+        table.on('tool(showTable)',function (obj) {
+            var data = obj.data;
+            switch (obj.event) {
+                case 'del':
+                    var ids=[];
+                    ids.push(data.id);
+                    tipDialog(ids);
+                    break;
+                case 'edit':
+
+                    arrId = data.id;
+                    loadTcTableIns();
+                    $(".table_div").hide();
+                    $("#step_demo").show();
+                    $(".title").html("编辑");
+                    $("#id").val(data.id);
+                    $("#arrangingName").val(data.arrangingName);
+                    if(!CoreUtil.isEmpty(data.termId)){
+                        $("#termId").find('option[value="'+ data.termId +'"]').prop('selected',true);
+						loadGradeList();
+                    }
+                    $("#weekDayNum").val(data.weekDayNum);
+                    $("#amNum").val(data.amNum);
+                    $("#pmNum").val(data.pmNum);
+                    $("#nightNum").val(data.nightNum);
+                    form.render();
+                    break;
+            }
+        });
+		
+		//加载可以排课的年级
+		form.on("select(select-term)", function(obj){
+			loadGradeList();
+		});
+
+        form.on("select(select-arr-type)", function (data) {
+            var type = $("#arrType").val();
+            switch (type) {
+                case "0":
+                    $("#teacherArr").hide();
+                    $("#classArr").hide();
+                    $("#courseArr").hide();
+                    loadTableData(type, 0);
+                    break;
+                case "1":
+                    $("#teacherArr").show();
+                    $("#classArr").hide();
+                    $("#courseArr").hide();
+                    break;
+                case "2":
+                    $("#teacherArr").hide();
+                    $("#classArr").show();
+                    $("#courseArr").hide();
+                    break;
+                case "3":
+                    $("#teacherArr").hide();
+                    $("#classArr").hide();
+                    $("#courseArr").show();
+                    break;
+                default:
+                    $("#teacherArr").hide();
+                    $("#classArr").hide();
+                    $("#courseArr").hide();
+                    break;
+            }
+            classId = null;
+            courseId = null;
+            teacherId = null;
+            clearTabData();
+        });
+
+        //导出
+        $('#export').on('click', function () {
+            //原先分页limit
+            var exportParams = {
+                limit: 10000,
+                key: $("#key").val()
+            };
+            CoreUtil.sendPost("/dlArrangingCourse/listByPage", exportParams, function (res) {
+                //初始化渲染数据
+                if (res.data != null && res.data.records != null) {
+                    table.exportFile(tableIns1.config.id, res.data.records, 'xls');
+                }
+            });
+        });
+
+        //删除
+        var tipDialog=function (ids) {
+            layer.open({
+                content: "确定要删除么?",
+                yes: function(index, layero){
+                    layer.close(index); //如果设定了yes回调，需进行手工关闭
+                    CoreUtil.sendDelete("/dlArrangingCourse/delete",ids,function (res) {
+                        layer.msg(res.msg, {time:1000},function () {
+                            search();
+                        });
+                    });
+                }
+            });
+        };
+
+        //返回
+        $("#btn_cancel").click(function() {
+            $step.goStep(1);
+            $(".table_div").show();
+            $("#step_demo").hide();
+            arrId = null;
+            return false;
+        });
+
+
+    });
+	
+	
+	function loadGradeList(){
+			var termId = $("#termId").val();
+			var gradeListDiv = $("#gradeListDiv");
+			gradeListDiv.empty();
+			CoreUtil.sendPost("/dlArrGrade/list", {termId: termId, arrId: arrId}, function(res){
+				var data = res.data;
+				var html = "";
+				for(var i = 0; i < data.length; i++){
+					if(data[i].status == -1){//如果是已经被其他排课任务排了，那么添加禁选项
+						html += '<input type="checkbox" name="gradeIds" title="' + data[i].gradeName + '" value="' + data[i].gradeId + '" disabled>'
+					}else if(data[i].status == 1){//如果是已经被选中了，就添加选中项
+						html += '<input type="checkbox" name="gradeIds" title="' + data[i].gradeName + '" value="' + data[i].gradeId + '" checked>'
+					}else{
+						html += '<input type="checkbox" name="gradeIds" title="' + data[i].gradeName + '" value="' + data[i].gradeId + '">'
+					}
+				}
+				gradeListDiv.append(html);
+				form.render();
+			});
+	}
+
+    function nextTabs(){
+        insertOrUpdateArrCourse();
+        element.tabChange('base_filter', '222');
+    }
+
+    function preTabs(){
+        element.tabChange('base_filter', '111');
+    }
+
+
+    function preStep(){
+        $step.preStep();
+    }
+
+    function nextStep(step){
+
+        switch (step) {
+            case 1:
+
+                //加载规则设置的tab
+                loadSetTabs();
+                $("#sTeacherName").val("");
+                $("#sClassName").val("");
+                $("#sCourseName").val("");
+                loadClassList();
+                loadCourseList();
+                loadTeacherList();
+                $step.nextStep();
+                break;
+            case 2:
+                loadPreSetTab();
+                $("#pCourseName").val("");
+                loadPreCourseList();
+                $step.nextStep();
+                break;
+            case 3:
+                $step.nextStep();
+                loadCourseTableList();
+                break;
+            case 4:
+
+                arrId = null;
+                $step.goStep(1);
+                element.tabChange('base_filter', '111');
+                $(".table_div").show();
+                $("#step_demo").hide();
+                break;
+        }
+
+    }
+
+
+    function insertOrUpdateArrCourse() {
+	
+		var gradeIds = [];
+		$('input[name=gradeIds]:checked').each(function() {
+		  gradeIds.push($(this).val());
+		});
+		
+		
+	
+        var params = {
+            id: arrId,
+            arrangingName: $("#arrangingName").val(),
+            termId: $("#termId").val(),
+            weekDayNum: $("#weekDayNum").val(),
+            amNum: $("#amNum").val(),
+            pmNum: $("#pmNum").val(),
+            nightNum: $("#nightNum").val(),
+			gradeIds: gradeIds
+        }
+        if(params.weekDayNum > 7){
+            layer.msg("周上课天数不能大于7");
+            return;
+        }
+
+        if(CoreUtil.isEmpty(params.amNum)){
+            layer.msg("上午课时数不能为空")
+            return;
+        }
+
+        if(params.amNum > 5){
+            layer.msg("上午课时数不能超过5");
+            return;
+        }
+
+        if(!CoreUtil.isEmpty(params.pmNum) && params.pmNum > 4){
+            layer.msg("下午课时不能超过4");
+            return;
+        }
+
+        if(!CoreUtil.isEmpty(params.nightNum) && params.nightNum > 3){
+            layer.msg("晚上课时不能超过3");
+            return;
+        }
+
+
+        if(CoreUtil.isEmpty(arrId)){//新增
+            CoreUtil.sendPost("/dlArrangingCourse/add", params, function (res) {
+                arrId = res.data.id;
+                layer.msg("新增成功");
+            });
+        }else{//更新
+            CoreUtil.sendPut("/dlArrangingCourse/update", params, function (res) {
+                layer.msg("更新成功");
+            });
+        }
+    }
+    
+    
+    function  loadSetTabs() {
+        var courseSetTab = $("#courseSetTab");
+        var preSetTab = $("#preSetTab");
+        preSetTab.empty();
+        var weekDayNum = $("#weekDayNum").val();
+        var amNum = $("#amNum").val();
+        var pmNum = $("#pmNum").val();
+        var nightNum = $("#nightNum").val();
+		var termId = $("#termId").val();
+        CoreUtil.loadCourseTable(weekDayNum,amNum, pmNum, nightNum, courseSetTab);
+
+        $("#courseSetTab td").click(function() {
+            var id = $(this).attr("id");
+            var text = $(this).text();
+            var self = this;
+            if(!CoreUtil.isEmpty(id)){
+                if(CoreUtil.isEmpty(text)){
+
+
+                    //新增不排课设置
+                    var type = $("#arrType").val();
+                    if(CoreUtil.isEmpty(type)){
+                        layer.msg("请选择不排课类型");
+                        return;
+                    }
+                    var typeId = "";
+                    if(type == "1"){
+                        typeId = teacherId;
+                        if(teacherId == null){
+                            layer.msg("请选择不排课教师");
+                            return;
+                        }
+                    }else if(type == "2"){
+                        typeId = classId;
+                        if(classId == null){
+                            layer.msg("请选择不排课班级");
+                            return;
+                        }
+                    }else if(type == "3"){
+                        typeId = courseId;
+                        if(courseId == null){
+                            layer.msg("请选择不排课课程");
+                            return;
+                        }
+                    }else if(type == "0"){
+                        typeId = 0;
+                    }
+
+                    var len = id.length;//id是由行号与列号组成，所以这里解析行号与列号
+                    var col = id.substring(len - 1, len);
+                    var row = id.substring(0, len - 1);
+                    var params = {
+                        arrId: arrId,
+						termId: termId,
+                        type: type,
+                        typeId: typeId,
+                        col: col,
+                        row: row,
+                        label: '不排课'
+                    }
+
+                    var isOutOfNum = false;
+                    //检测是否已经超过了该课程的数量
+                    CoreUtil.sendPost("/dlArrSet/isOutOfNum", params, function (res) {
+                        isOutOfNum = res.data;
+                    }, false);
+                    if(isOutOfNum){
+                        layer.msg("已经超过了不排课数量");
+                        return;
+                    }
+
+                    CoreUtil.sendPost("/dlArrSet/add", params ,function (res) {
+                        $(self).attr("rid", res.data.id);//给节点设置ID信息
+                        $(self).text(res.data.label);
+                    });
+                }else{
+
+                    var ids = [];
+                    //取消不排课设置
+                    ids.push($(this).attr("rid"));
+                    CoreUtil.sendDelete("/dlArrSet/delete", ids,function (res) {
+                        $(self).attr("rid", "");
+                        $(self).text("");
+                    });
+                }
+            }
+
+        });
+    }
+
+
+    /**
+     * 添加预排课表格，并给该表格添加点击事件
+     *
+     */
+    function loadPreSetTab() {
+        var courseSetTab = $("#courseSetTab");
+        courseSetTab.empty();
+        var preSetTab = $("#preSetTab");
+        var weekDayNum = $("#weekDayNum").val();
+        var amNum = $("#amNum").val();
+        var pmNum = $("#pmNum").val();
+        var nightNum = $("#nightNum").val();
+		var termId = $("#termId").val();
+        CoreUtil.loadCourseTable(weekDayNum,amNum, pmNum, nightNum, preSetTab);
+
+        $("#preSetTab td").click(function() {
+            var id = $(this).attr("id");
+
+            var arr = $(this).attr("arr");
+            if(arr == "no"){
+                layer.msg("此处已经设置不排课，请重新选择");
+                return;
+            }
+            var text = $(this).text();
+            var self = this;
+            if(!CoreUtil.isEmpty(id)){
+                if(CoreUtil.isEmpty(text)){
+                    //新增预排课设置
+                    var type = 4;
+                    var typeId = preCourseId;
+                    if(CoreUtil.isEmpty(preCourseId)){
+                        layer.msg("请选择需预排课的课程信息");
+                        return;
+                    }
+
+
+                    var len = id.length;//id是由行号与列号组成，所以这里解析行号与列号
+                    var col = id.substring(len - 1, len);
+                    var row = id.substring(0, len - 1);
+                    var params = {
+                        arrId: arrId,
+						termId: termId,
+                        type: type,
+                        typeId: typeId,
+                        col: col,
+                        row: row,
+                        label: courseLab
+                    }
+                    var isOutOfNum = false;
+
+
+
+                    //检测是否已经超过了该课程的数量
+                    CoreUtil.sendPost("/dlArrSet/isOutOfNum", params, function (res) {
+                        isOutOfNum = res.data;
+                    }, false);
+                    if(isOutOfNum){
+                        layer.msg("该课程已经排完");
+                        return;
+                    }
+
+
+                    CoreUtil.sendPost("/dlArrSet/add", params ,function (res) {
+                        $(self).attr("rid", res.data.id);//给节点设置ID信息
+                        $(self).html(CoreUtil.courseNameFormat(courseLab));
+                    });
+                }else{
+
+                    var ids = [];
+                    //取消不排课设置
+                    ids.push($(this).attr("rid"));
+                    CoreUtil.sendDelete("/dlArrSet/delete", ids,function (res) {
+                        $(self).attr("rid", "");
+                        $(self).text("");
+                    });
+                }
+            }
+
+        });
+    }
+
+    /**
+     * 通过数据加载不排课选项明细列表
+     *
+     */
+    function loadList(params) {
+        var data = params.data;
+        var click = params.click;
+        var node = params.node;
+        var idKey = params.idKey;
+        var labelKey = params.labelKey;
+        var labelKey2 = params.labelKey2;
+        var labelKey3 = params.labelKey3;
+        var length = params.data.length;
+
+
+
+        for(var i = 0; i < length; i ++){
+            var label = data[i][labelKey];
+            if(!CoreUtil.isEmpty(labelKey2)){
+                label += "&nbsp;&nbsp;&nbsp;&nbsp;" + data[i][labelKey2];
+                if(!CoreUtil.isEmpty(labelKey3)){
+                    label += "&nbsp;&nbsp;&nbsp;&nbsp;" + data[i][labelKey3];
+                }
+            }
+            $(node).append('<p key="' + data[i][idKey] + '" lab="' + data[i][labelKey2] + '" style="cursor:default">' + label + '</p>');
+        }
+
+        $(document).on("click",node + ' p', click);
+
+    }
+
+    /**
+     * 添加预排课表选项明细列表
+     *
+     */
+    function loadPreCourseList() {
+        var courseName = $("#pCourseName").val();
+        var courseList = $("#pCourseList");
+		var termId = $("#termId").val();
+        clearPreTabData();
+        CoreUtil.sendPost("/dlArrBase/courses", {arrId: arrId, courseName: courseName}, function (res) {
+            courseList.empty();
+            loadList({
+                data: res.data,
+                node: '#pCourseList',
+                idKey: 'id',
+                labelKey: 'courseName',
+                labelKey2: 'className',
+                labelKey3: 'teacherName',
+                click: function () {
+                    $("#pCourseList").children(".bg-color").removeClass('bg-color');
+                    $(this).addClass('bg-color');
+                    preCourseId = $(this).attr('key');
+                    courseLab = $(this).text();
+
+                    loadTableData(4, preCourseId);
+                    //查看该课程哪些位置不能排课，并进行加载，设置
+                    setPreTableNoArrPosition(preCourseId);
+                }
+            });
+        });
+    }
+
+
+    function setPreTableNoArrPosition(courseId) {
+
+        CoreUtil.sendPost("/dlArrSet/findPreTableNoArrPosition", {typeId: courseId}, function (res) {
+
+            var data = res.data;
+            var length = data.length;
+            for(var i = 0; i < length; i++){
+				var id = "" + data[i].row + data[i].col;
+				if(data[i].status == 1){//不排课
+					$("#" + id).addClass("no-arr-bg-color");
+				}else if(data[i].status == 2){//已预排课
+					$("#" + id).addClass("pre-bg-color");
+				}else if(data[i].status == 3){//已经在其他排课任务中已经排课
+					$("#" + id).addClass("arred-bg-color");
+				}
+                $("#" + id).attr("arr", "no");
+				$("#" + id).html(CoreUtil.courseNameFormat(data[i].desc));
+            }
+        }, false);
+    }
+
+
+    function loadCourseList() {
+        var courseName = $("#sCourseName").val();
+        var courseList = $("#courseList");
+        clearTabData();
+        CoreUtil.sendPost("/dlArrBase/courses", {arrId: arrId, courseName: courseName}, function (res) {
+            courseList.empty();
+            loadList({
+                data: res.data,
+                node: '#courseList',
+                idKey: 'id',
+                labelKey: 'courseName',
+                labelKey2: 'className',
+                labelKey3: 'teacherName',
+                click: function () {
+                    $("#courseList").children(".bg-color").removeClass('bg-color');
+                    $(this).addClass('bg-color');
+                    courseId = $(this).attr('key');
+                    loadTableData(3, courseId);
+
+                }
+            })
+        });
+    }
+
+
+    function loadTeacherList() {
+        var teacherName = $("#sTeacherName").val();
+        var teacherList = $("#teacherList");
+        clearTabData();
+        CoreUtil.sendPost("/dlArrBase/teachers", {arrId: arrId, teacherName: teacherName}, function (res) {
+            teacherList.empty();
+            loadList({
+                data: res.data,
+                node: '#teacherList',
+                idKey: 'teacherId',
+                labelKey: 'teacherName',
+                click: function () {
+                    $("#teacherList").children(".bg-color").removeClass('bg-color');
+                    $(this).addClass('bg-color');
+                    teacherId = $(this).attr('key');
+                    loadTableData(1, teacherId);
+                }
+            })
+
+        });
+    }
+
+
+    function loadClassList() {
+        var className = $("#sClassName").val();
+        var classList = $("#classList");
+        clearTabData();
+        CoreUtil.sendPost("/dlArrBase/classes", {arrId: arrId, className: className}, function (res) {
+            classList.empty();
+            loadList({
+                data: res.data,
+                node: '#classList',
+                idKey: 'classId',
+                labelKey: 'className',
+                click: function () {
+                    $("#classList").children(".bg-color").removeClass('bg-color');
+                    $(this).addClass('bg-color');
+                    classId = $(this).attr('key');
+                    loadTableData(2, classId);
+
+                }
+            })
+        });
+    };
+
+
+
+    function clearTabData() {
+        $("#courseSetTab td").each(function () {
+            if(!CoreUtil.isEmpty($(this).attr("id"))){
+                $(this).attr("rid", "");
+                $(this).text("");
+
+            }
+        });
+    }
+
+    function clearPreTabData() {
+        $("#preSetTab td").each(function () {
+            if(!CoreUtil.isEmpty($(this).attr("id"))){
+                $(this).attr("rid", "");
+                $(this).text("");
+                $(this).removeClass("pre-bg-color");
+				$(this).removeClass("no-arr-bg-color");
+				$(this).removeClass("arred-bg-color");
+                $(this).attr("arr", "yes");
+            }
+        });
+    }
+
+
+    /**
+     *
+     *
+     * @param type 1 教师不排课  2 班级不排课  3 课程不排课 0整体不排课
+     * @param typeId
+     */
+    function loadTableData(type, typeId) {
+        console.log(typeId);
+
+        if(type > 3){
+            clearPreTabData();
+        }else{
+            clearTabData();
+        }
+        var params = {
+            arrId: arrId,
+            type: type,
+            typeId: typeId
+        };
+
+        CoreUtil.sendPost("/dlArrSet/list", params, function (res) {
+
+           var data = res.data;
+           if(CoreUtil.isEmpty(data)){
+               return;
+           }
+           for(var i = 0; i < data.length; i ++){
+               var id = "" + data[i].row + data[i].col;
+               $("#" + id).html(CoreUtil.courseNameFormat(data[i].label));
+               $("#" + id).attr("rid", data[i].id);
+           }
+        });
+    }
+
+
+    function actionArr() {
+        layer.confirm("确定要开始排课吗？如果之前已经排了课，将会删除之前的数据。", {btn: ['确认', '取消']}, function (index) {
+            CoreUtil.sendPost("/dlArrangingCourse/arrCourse", {id: arrId}, function(res){
+                console.log(res.data);
+                if(res.data == 1){
+                    layer.msg("排课完成，但是还是存在部分课程未能排进系统，你可以在未排成功列表中查看");
+                }else if(res.data == 0){
+                    layer.msg("排课完成");
+                }
+                loadCourseTableList();
+            });
+            layer.close(index);
+        });
+
+    }
+    
+    function exchangeCourse() {
+        var index = layer.open({
+            type: 2,
+            area: ['900px', '600px'],
+            btn: ["确认"],
+            shadeClose : true,
+            maxmin: true,
+            title: "课程调整",
+            content: "/index/exchangeCoursePage",
+            success: function (layero, index) {
+                var iframe = window['layui-layer-iframe' + index];
+                iframe.child(arrId, index);
+            }
+        });
+
+        layer.full(index);
+    }
+
+
+    function loadCourseTableList(){
+        layer.msg("load");
+        courseTableIns.reload({
+            where : {
+                arrId: arrId
+            },
+            url: "/dlCourseTable/listByPage",
+            page: {
+                curr: 1
+            }
+        });
+    }
+
+
+
+
+    function loadTcTableIns() {
+        tcTableIns.reload({
+            where: {
+                arrId: arrId,
+                courseName: $("#ss").val()
+            },
+            url: "/dlArrBase/listByPage",
+            page: {
+                curr: 1 //重新从第 1 页开始
+            }
+        });
+    }
+
+
+    //执行查询
+    function search() {
+        //这里以搜索为例
+        tableIns1.reload({
+            where: { //设定异步数据接口的额外参数，任意设
+                key: $("#key").val()
+            }
+            , page: {
+                curr: 1 //重新从第 1 页开始
+            }
+        });
+    };
+</script>
